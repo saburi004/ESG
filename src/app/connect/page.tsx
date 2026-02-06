@@ -45,20 +45,34 @@ export default function ConnectPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 animate-in fade-in duration-500">
+    <div className="flex flex-col items-center min-h-[85vh] px-4 animate-in fade-in duration-700 relative overflow-hidden">
       
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Page Header */}
+      <div className="text-center mb-12 mt-12 relative z-10">
+         <div className="inline-flex items-center justify-center p-3 bg-eco-green/10 rounded-full mb-4 border border-eco-green/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+            <ShieldCheck className="text-eco-green" size={32} />
+         </div>
+         <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Connect Your Data Source</h1>
+         <p className="text-gray-400 text-lg max-w-xl mx-auto">
+            Securely integrate your LLM provider to start tracking real-time carbon metrics.
+         </p>
+      </div>
+
+      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
         
         {/* Left: Form */}
-        <div className="bg-navy-800 border border-navy-700 p-8 rounded-2xl shadow-xl">
-          <div className="flex items-center gap-2 mb-6 text-gray-400 hover:text-white transition-colors w-fit">
-            <Link href="/dashboard" className="flex items-center gap-2">
-               <ArrowLeft size={16} /> Back
+        <div className="bg-navy-800/50 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.2)] hover:shadow-[0_0_60px_rgba(16,185,129,0.05)] transition-shadow duration-500 group relative">
+          {/* Subtle Border Glow */}
+          <div className="absolute inset-0 rounded-3xl border border-white/5 group-hover:border-eco-green/20 transition-colors pointer-events-none" />
+          
+          <div className="flex items-center gap-2 mb-8 text-gray-400 hover:text-white transition-colors w-fit">
+            <Link href="/dashboard" className="flex items-center gap-2 hover:-translate-x-1 transition-transform">
+               <ArrowLeft size={16} /> <span className="text-sm font-medium">Back to Dashboard</span>
             </Link>
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-2">Connect Project</h1>
-          <p className="text-gray-400 mb-8 text-sm">Integrate usage metrics from your AI providers securely.</p>
+          <h2 className="text-2xl font-bold text-white mb-1">Configuration</h2>
+          <p className="text-gray-400 mb-8 text-sm">Enter your project details below.</p>
 
           <form onSubmit={handleConnect} className="space-y-6">
              <div>
@@ -69,7 +83,7 @@ export default function ConnectPage() {
                  placeholder="e.g. My Chatbot Production"
                  value={projectName}
                  onChange={e => setProjectName(e.target.value)}
-                 className="w-full bg-navy-900 border border-navy-600 rounded-lg p-3 text-white focus:border-eco-green outline-none transition-all"
+                 className="w-full bg-navy-950/50 border border-white/10 rounded-xl p-4 text-white placeholder:text-gray-600 focus:border-eco-green focus:ring-1 focus:ring-eco-green/50 outline-none transition-all backdrop-blur-sm"
                />
              </div>
 
@@ -77,11 +91,19 @@ export default function ConnectPage() {
                <label className="block text-sm font-medium text-gray-300 mb-2">Provider</label>
                <div className="grid grid-cols-2 gap-4">
                  <button type="button" onClick={() => setProvider('groq')}
-                   className={`p-3 rounded-lg border text-center transition-all ${provider === 'groq' ? 'bg-eco-green/10 border-eco-green text-eco-green font-bold' : 'border-navy-600 text-gray-400 hover:bg-navy-700'}`}>
+                   className={`p-4 rounded-xl border flex items-center justify-center gap-2 transition-all duration-300 ${
+                       provider === 'groq' 
+                       ? 'bg-eco-green/10 border-eco-green text-eco-green font-bold shadow-[0_0_15px_rgba(0,255,136,0.1)]' 
+                       : 'bg-navy-950/30 border-white/5 text-gray-400 hover:bg-white/5'
+                   }`}>
                    Groq
                  </button>
                  <button type="button" onClick={() => setProvider('openai')}
-                   className={`p-3 rounded-lg border text-center transition-all ${provider === 'openai' ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' : 'border-navy-600 text-gray-400 hover:bg-navy-700'}`}>
+                   className={`p-4 rounded-xl border flex items-center justify-center gap-2 transition-all duration-300 ${
+                       provider === 'openai' 
+                       ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold shadow-[0_0_15px_rgba(59,130,246,0.1)]' 
+                       : 'bg-navy-950/30 border-white/5 text-gray-400 hover:bg-white/5'
+                   }`}>
                    OpenAI
                  </button>
                </div>
@@ -95,42 +117,47 @@ export default function ConnectPage() {
                  placeholder="sk-..."
                  value={apiKey}
                  onChange={e => setApiKey(e.target.value)}
-                 className="w-full bg-navy-900 border border-navy-600 rounded-lg p-3 text-white focus:border-eco-green outline-none transition-all"
+                 className="w-full bg-navy-950/50 border border-white/10 rounded-xl p-4 text-white placeholder:text-gray-600 focus:border-eco-green focus:ring-1 focus:ring-eco-green/50 outline-none transition-all backdrop-blur-sm font-mono"
                />
-               <p className="text-xs text-gray-500 mt-2">
-                 We only use this to fetch usage metrics. We never access prompts.
+               <p className="text-xs text-eco-green/70 mt-3 flex items-center gap-1.5">
+                 <ShieldCheck size={12} /> We encrypt your key and only fetch usage logs.
                </p>
              </div>
 
              <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Import Usage History</label>
-                <select 
-                  value={dateRange}
-                  onChange={e => setDateRange(e.target.value)}
-                  className="w-full bg-navy-900 border border-navy-600 rounded-lg p-3 text-white focus:border-eco-green outline-none transition-all"
-                >
-                    <option value="7d">Last 7 Days</option>
-                    <option value="30d">Last 30 Days</option>
-                    <option value="90d">Last 3 Months</option>
-                </select>
+                <div className="relative">
+                    <select 
+                      value={dateRange}
+                      onChange={e => setDateRange(e.target.value)}
+                      className="w-full bg-navy-950/50 border border-white/10 rounded-xl p-4 text-white focus:border-eco-green focus:ring-1 focus:ring-eco-green/50 outline-none transition-all appearance-none cursor-pointer hover:bg-navy-900/50"
+                    >
+                        <option value="7d" className="bg-navy-900">Last 7 Days</option>
+                        <option value="30d" className="bg-navy-900">Last 30 Days</option>
+                        <option value="90d" className="bg-navy-900">Last 3 Months</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                        <ArrowLeft size={16} className="-rotate-90" />
+                    </div>
+                </div>
              </div>
 
              {error && (
-               <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm flex items-center gap-2">
-                 <AlertTriangle size={16} /> {error}
+               <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm flex items-center gap-3 animate-in slide-in-from-top-2">
+                 <AlertTriangle size={18} className="shrink-0" /> {error}
                </div>
              )}
 
              {success && (
-               <div className="p-3 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-sm flex items-center gap-2">
-                 <CheckCircle2 size={16} /> Connected Successfully! Redirecting...
+               <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-sm flex items-center gap-3 animate-in slide-in-from-top-2">
+                 <CheckCircle2 size={18} className="shrink-0" /> Connection Successful! Redirecting...
                </div>
              )}
 
              <button 
                type="submit" 
                disabled={loading || success}
-               className="w-full bg-eco-green text-navy-900 font-bold py-3 rounded-lg hover:bg-eco-light transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+               className="w-full bg-gradient-to-r from-eco-green to-teal-500 text-navy-900 font-bold py-4 rounded-xl hover:shadow-[0_4px_30px_rgba(0,255,136,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 mt-4"
              >
                {loading ? <Loader2 className="animate-spin" size={20} /> : 'Connect Project'}
              </button>
@@ -139,36 +166,48 @@ export default function ConnectPage() {
 
         {/* Right: Security Info */}
         <div className="flex flex-col justify-center space-y-6">
-           <div className="bg-navy-800/50 p-6 rounded-2xl border border-navy-700">
-              <div className="w-12 h-12 bg-eco-green/10 rounded-full flex items-center justify-center mb-4">
-                 <ShieldCheck className="text-eco-green" size={24} />
+           <div className="bg-navy-800/30 backdrop-blur-md p-8 rounded-3xl border border-white/5 hover:bg-navy-800/40 transition-colors">
+              <div className="w-14 h-14 bg-gradient-to-br from-eco-green/20 to-teal-500/10 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-white/5">
+                 <ShieldCheck className="text-eco-green" size={32} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Enterprise Security First</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                 Your keys are encrypted at rest. This connection is strictly <strong>read-only</strong> for usage metadata.
+              <h3 className="text-xl font-bold text-white mb-3">Enterprise-Grade Security</h3>
+              <p className="text-gray-400 leading-relaxed">
+                 Your security is our priority. Keys are encrypted at rest using AES-256. 
+                 We strictly establish a <strong>read-only</strong> connection for usage metadata only.
               </p>
            </div>
 
-           <div className="bg-navy-800/50 p-6 rounded-2xl border border-navy-700">
-               <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                 <CheckCircle2 className="text-blue-400" size={18} /> What We Access
-               </h3>
-               <ul className="space-y-3 text-sm text-gray-400">
-                 <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Token Usage Counts</li>
-                 <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Request Volume logs</li>
-                 <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Model Names (co2 calculation)</li>
-               </ul>
-           </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="bg-navy-800/30 backdrop-blur-md p-6 rounded-2xl border border-white/5">
+                   <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
+                     <CheckCircle2 className="text-blue-400" size={16} /> Accessible Data
+                   </h3>
+                   <ul className="space-y-3 text-sm text-gray-400">
+                     <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-eco-green rounded-full shadow-[0_0_5px_#10b981]"></span> Token Counts</li>
+                     <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-eco-green rounded-full shadow-[0_0_5px_#10b981]"></span> Request Logs</li>
+                     <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-eco-green rounded-full shadow-[0_0_5px_#10b981]"></span> Model Metadata</li>
+                   </ul>
+               </div>
 
-           <div className="bg-navy-800/50 p-6 rounded-2xl border border-navy-700">
-               <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                 <AlertTriangle className="text-red-400" size={18} /> What We NEVER Access
-               </h3>
-               <ul className="space-y-3 text-sm text-gray-400">
-                 <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Prompt Inputs</li>
-                 <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Model Outputs / Completions</li>
-                 <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Customer PII Data</li>
-               </ul>
+               <div className="bg-navy-800/30 backdrop-blur-md p-6 rounded-2xl border border-white/5">
+                   <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
+                     <AlertTriangle className="text-red-400" size={16} /> Restricted Data
+                   </h3>
+                   <ul className="space-y-3 text-sm text-gray-400">
+                     <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_5px_#ef4444]"></span> Prompt Text</li>
+                     <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_5px_#ef4444]"></span> Model Outputs</li>
+                     <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_5px_#ef4444]"></span> Customer PII</li>
+                   </ul>
+               </div>
+           </div>
+           
+           {/* Ambient Decoration */}
+           <div className="p-8 rounded-3xl bg-gradient-to-br from-eco-green/5 to-transparent border border-white/5 relative overflow-hidden">
+                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-eco-green/10 rounded-full blur-3xl"></div>
+                <h4 className="font-bold text-white mb-2 relative z-10">Why Connect?</h4>
+                <p className="text-sm text-gray-400 relative z-10">
+                    Unlock specific carbon insights per project. Compare efficiency across models and track your sustainability goals in real-time.
+                </p>
            </div>
         </div>
 

@@ -111,7 +111,7 @@ export default function DashboardPage() {
   };
 
   const currentProjectMetrics = getProjectMetrics(selectedProject);
-  const budget = 250; 
+  const budget = 50; 
   // Ensure percentage is at least 0. If data is 0, it's 0.
   const usagePercent = Math.min((currentProjectMetrics.co2 / budget) * 100, 100);
 
@@ -152,17 +152,17 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Empty State / Connect Prompt for Non-Admin with no projects */}
+      {/* Empty State */}
       {(!data?.availableProjects || data.availableProjects.length === 0) && (
-          <div className="bg-navy-800/80 border border-eco-green/30 p-8 rounded-2xl flex flex-col items-center text-center animate-in fade-in zoom-in duration-500">
-             <div className="w-16 h-16 bg-eco-green/10 rounded-full flex items-center justify-center mb-4">
+          <div className="bg-navy-800/80 shadow-[0_4px_30px_rgba(0,0,0,0.2)] backdrop-blur-sm p-8 rounded-3xl flex flex-col items-center text-center animate-in fade-in zoom-in duration-500 hover:shadow-[0_8px_40px_rgba(16,185,129,0.1)] transition-all">
+             <div className="w-16 h-16 bg-eco-green/10 rounded-full flex items-center justify-center mb-4 ring-1 ring-eco-green/20">
                  <Zap className="text-eco-green" size={32} />
              </div>
              <h2 className="text-2xl font-bold text-white mb-2">Establish Connection</h2>
-             <p className="text-gray-400 max-w-lg mb-6">
-                No active projects detected. Connect your LLM provider (OpenAI, Groq) to start tracking carbon emissions and energy usage instantly.
+             <p className="text-gray-400 max-w-lg mb-6 leading-relaxed">
+                Connect your LLM provider to start tracking. Your dashboard awaits.
              </p>
-             <Link href="/connect" className="bg-eco-green text-navy-900 hover:bg-eco-light px-6 py-3 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2">
+             <Link href="/connect" className="bg-eco-green text-navy-900 hover:bg-eco-light px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-eco-green/20 hover:shadow-eco-green/40 hover:scale-[1.02] flex items-center gap-2">
                  Connect Project <ArrowRight size={18} />
              </Link>
           </div>
@@ -196,11 +196,11 @@ export default function DashboardPage() {
               color: "text-purple-400" 
             },
         ].map((card, i) => (
-             <div key={i} className="bg-navy-800 border border-navy-700 p-6 rounded-2xl shadow-lg relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+             <div key={i} className="bg-navy-800/60 backdrop-blur-md p-6 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group border border-white/5">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
                    <card.icon size={64} className={card.color} />
                 </div>
-                <h3 className="text-gray-400 text-sm font-medium mb-2">{card.title}</h3>
+                <h3 className="text-gray-400 text-sm font-medium mb-2 uppercase tracking-wide">{card.title}</h3>
                 <div className={`text-3xl font-bold ${card.color} font-mono`}>{card.value}</div>
              </div>
         ))}
@@ -209,7 +209,7 @@ export default function DashboardPage() {
        {/* Charts Section */}
        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Line Chart */}
-          <div className="lg:col-span-2 bg-navy-800 border border-navy-700 p-6 rounded-2xl h-[400px] flex flex-col">
+          <div className="lg:col-span-2 bg-navy-800/60 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-white/5 h-[400px] flex flex-col hover:shadow-md transition-shadow">
              <h3 className="text-lg font-bold text-white mb-4">Carbon Emission Trends</h3>
              <div className="flex-1 min-h-0">
                {data?.history && data.history.length > 0 ? (
@@ -221,7 +221,7 @@ export default function DashboardPage() {
           </div>
           
           {/* Bar Chart */}
-          <div className="bg-navy-800 border border-navy-700 p-6 rounded-2xl h-[400px] flex flex-col">
+          <div className="bg-navy-800/60 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-white/5 h-[400px] flex flex-col hover:shadow-md transition-shadow">
              <h3 className="text-lg font-bold text-white mb-4">Project Impact Analysis</h3>
              <div className="flex-1 min-h-0">
                 <ProjectChart metrics={data?.projects || {}} />
@@ -230,7 +230,8 @@ export default function DashboardPage() {
        </div>
        
        {/* Carbon Accounting Engine */}
-       <div className="bg-navy-800 border border-navy-700 p-6 rounded-2xl shadow-xl border-t-4 border-t-eco-green">
+       <div className="bg-navy-800/60 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-t-4 border-t-eco-green relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-eco-green/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
              <div>
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -246,10 +247,10 @@ export default function DashboardPage() {
                    <select 
                      value={selectedProject}
                      onChange={(e) => setSelectedProject(e.target.value)}
-                     className="bg-navy-900 border border-navy-600 text-white rounded-lg px-3 py-1 text-sm focus:border-eco-green outline-none min-w-[200px]"
+                     className="bg-navy-950/50 border border-white/10 text-white rounded-xl px-4 py-2 text-sm focus:border-eco-green focus:ring-1 focus:ring-eco-green outline-none min-w-[200px] backdrop-blur-md transition-all"
                    >
                      {projectOptions.map((p: string) => (
-                       <option key={p} value={p}>{p}</option>
+                       <option key={p} value={p} className="bg-black">{p}</option>
                      ))}
                    </select>
                ) : (
@@ -268,7 +269,7 @@ export default function DashboardPage() {
                     </span>
                  </div>
                  {/* Fixed: Removed extra borders and ensured width is correct */}
-                 <div className="w-full h-4 bg-navy-900 rounded-full overflow-hidden border border-navy-600 relative">
+                 <div className="w-full h-4 bg-navy-950/50 rounded-full overflow-hidden relative shadow-inner">
                     <div 
                       className={`h-full rounded-full transition-all duration-1000 ${
                         usagePercent > 80 ? 'bg-red-500' : 'bg-eco-green'
@@ -283,7 +284,7 @@ export default function DashboardPage() {
              </div>
 
              {/* Score Card */}
-             <div className="bg-navy-900 rounded-xl p-4 flex items-center justify-between border border-navy-600">
+             <div className="bg-navy-950/40 rounded-2xl p-6 flex items-center justify-between border border-white/5 shadow-inner">
                 <div>
                    <div className="text-gray-400 text-sm">Sustainability Score</div>
                    <div className="text-xs text-gray-500">Based on recent activity</div>
@@ -302,7 +303,7 @@ export default function DashboardPage() {
        <div className="flex justify-center mt-8 pb-8">
           <button 
              onClick={handleDownloadReport}
-             className="bg-navy-800 border border-navy-600 hover:bg-eco-green hover:text-navy-900 text-white font-medium py-3 px-6 rounded-xl shadow-lg transition-all flex items-center gap-2 group"
+             className="bg-navy-800/80 border border-white/10 hover:bg-eco-green hover:text-navy-900 hover:border-transparent text-white font-medium py-4 px-8 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_25px_rgba(0,255,136,0.2)] transition-all duration-300 flex items-center gap-3 group active:scale-[0.98]"
           >
              Download Full Regulatory Report (CSRD/ISO) 
              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
