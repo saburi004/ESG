@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
-import { MODEL_ENERGY_ESTIMATES } from '@/utils/constants';
+import { MODEL_ENERGY_ESTIMATES, REGIONS } from '@/utils/constants';
+import { EmberService } from '@/services/ember';
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY_SUGGESTIONS || process.env.GROQ_API_KEY,
@@ -14,13 +15,28 @@ export async function POST(req: Request) {
         }
         const { model, region, priority, requestsPerDay, gpu } = await req.json();
 
+        // 1. Fetch Real-Time/Yearly Carbon Intensity from Ember
+        let carbonIntensity = 475; // Default Global Avg
+        const regionName = REGIONS.find(r => r.id === region)?.name || region;
+
+        // Try Ember
+        const emberValue = await EmberService.getCarbonIntensity(region);
+        if (emberValue) {
+            carbonIntensity = emberValue;
+            console.log(`Using Ember Data for ${region}: ${emberValue} gCO2/kWh`);
+        } else {
+            // Fallback to constants
+            const fallback = REGIONS.find(r => r.id === region)?.carbonIntensity;
+            if (fallback) carbonIntensity = fallback;
+        }
+
         const systemPrompt = `
       You are an expert AI Sustainability Consultant. 
       Analyze the user's setup and provide 3 concrete suggestions to reduce carbon footprint.
       
       User Setup:
       - Model: ${model}
-      - Region: ${region}
+      - Region: ${regionName} (Carbon Intensity: ${carbonIntensity} gCO2/kWh)
       - Priority: ${priority}
       - Avg Requests/Day: ${requestsPerDay}
       - HW: ${gpu}

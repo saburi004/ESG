@@ -14,11 +14,28 @@ export async function POST(req: Request) {
         }
         const { message } = await req.json();
 
-        // 1. Retrieve relevant context (Simplified RAG - Just fetching formatted project data for now as "documents")
-        // In a real RAG, we would embed the query and search Qdrant. 
-        // Here, we'll feed project metadata directly since it's small context.
+        // 1. Retrieve relevant context using RAG Service
+        let context = "";
+        try {
+            // Import dynamically to avoid side-effects if needed
+            const { ragService } = await import('@/services/rag');
+            await ragService.init();
 
-        const context = JSON.stringify(PROJECTS);
+            const searchResults = await ragService.search(message, 3);
+
+            if (searchResults.length > 0) {
+                context = "Relevant Dashboard Context:\n" + searchResults.map(r => `- ${r.content}`).join("\n");
+            } else {
+                context = "No specific simulation data found yet. Answer based on general knowledge or assume defaults.";
+                // Fallback to static context if RAG empty (first run)
+                context += "\nStatic Project Config: " + JSON.stringify(PROJECTS);
+            }
+
+        } catch (ragErr) {
+            console.error("RAG Search Error:", ragErr);
+            context = "Context retrieval failed. Answer generally.";
+            context += "\nStatic Project Config: " + JSON.stringify(PROJECTS);
+        }
 
         // 2. LLM Call
         const stream = await groq.chat.completions.create({
@@ -26,15 +43,14 @@ export async function POST(req: Request) {
                 {
                     role: "system",
                     content: `You are the EcoGenAI Assistant. User asks questions about the ESG dashboard.
-          Use the following Project Config Context: ${context}
           
-          If asked about energy or CO2, pretend you looked up the live metrics (simulated).
-          - A is Heavy Usage (High CO2)
-          - B is Medium
-          - C is Low
-          - D is Very Low (Greenest)
+          Use the following Retrieved Context to answer: 
+          ${context}
           
-          Keep answers concise and professional.
+          If the context contains timestamps and CO2 values, use them.
+          If no specific data is found in context, explain that you are waiting for the traffic simulation to run.
+          
+          Keep answers concise, professional, and data-driven.
           `
                 },
                 { role: "user", content: message }

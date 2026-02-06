@@ -33,34 +33,60 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Automatic Traffic Simulation every 50 seconds
+  useEffect(() => {
+     const simInterval = setInterval(() => {
+        runSimulation();
+     }, 50000);
+     return () => clearInterval(simInterval);
+  }, []);
+
   const runSimulation = async () => {
     setSimulating(true);
     try {
       await fetch('/api/cron/traffic');
-      // Wait for Redis to settle
+      // Wait for Redis to settle, then fetch fresh data
       setTimeout(() => {
         fetchData(); 
-      }, 1500);
+      }, 1000);
     } catch (e) {
       console.error(e);
+    } finally {
+        // Stop spinning after a delay to ensure data load is visible
+        setTimeout(() => setSimulating(false), 1500);
     }
-    // Keep simulating state for a bit longer for visual feedback
-    setTimeout(() => setSimulating(false), 1500);
   };
 
-  const handleDownloadReport = () => {
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + "Report Type,Date,Status,Scope 3 Compliance\n"
-      + "CSRD ESG Report," + new Date().toLocaleDateString() + ",DRAFT,Pending Review\n"
-      + "ISO 14064 GHG," + new Date().toLocaleDateString() + ",Verified,High Confidence";
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "EcoGenAI_Regulatory_Report.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadReport = async () => {
+    try {
+      const response = await fetch('/api/dashboard/download');
+      
+      if (!response.ok) {
+          if (response.status === 403) alert("Access Denied: You are not authorized to download this report.");
+          else if (response.status === 404) alert("No data available to download.");
+          else alert("Failed to download report.");
+          return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      // Get filename from header or default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `EcoGenAI_Report.csv`;
+      if (contentDisposition) {
+          const match = contentDisposition.match(/filename="(.+)"/);
+          if (match) filename = match[1];
+      }
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (e) {
+      console.error("Download failed:", e);
+      alert("An error occurred while downloading the report.");
+    }
   };
 
   const getProjectMetrics = (projectName: string) => {
@@ -230,12 +256,13 @@ export default function DashboardPage() {
           </div>
        </div>
 
-       <div className="flex justify-end">
+       <div className="flex justify-center mt-8 pb-8">
           <button 
              onClick={handleDownloadReport}
-             className="text-gray-400 hover:text-white text-sm underline flex items-center gap-1 hover:text-eco-green transition-colors"
+             className="bg-navy-800 border border-navy-600 hover:bg-eco-green hover:text-navy-900 text-white font-medium py-3 px-6 rounded-xl shadow-lg transition-all flex items-center gap-2 group"
           >
-             Download Regulatory Report (CSRD/ISO) <ArrowRight size={14} className="inline" />
+             Download Full Regulatory Report (CSRD/ISO) 
+             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </button>
        </div>
 
