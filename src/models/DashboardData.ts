@@ -18,6 +18,11 @@ const DashboardDataSchema = new Schema({
     global: {
         type: Schema.Types.Mixed, // Global metrics
         default: {}
+    },
+    roomId: {
+        type: String,
+        index: true,
+        default: null
     }
 });
 

@@ -7,7 +7,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // Define routes where Sidebar should be HIDDEN
-  const isPublicPage = pathname === '/' || pathname.startsWith('/auth');
+  const isPublicPage = pathname === '/' || pathname.startsWith('/auth') || pathname === '/room/create';
 
   if (isPublicPage) {
     // Return children directly (Full Page Layout)

@@ -44,7 +44,7 @@ export default function AskPage() {
     <div className="h-[calc(100vh-100px)] flex flex-col max-w-5xl mx-auto relative">
       {/* Page Header */}
       <div className="mb-8 mt-4 animate-in fade-in slide-in-from-top-4 duration-700">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-2">Project RAG Chat</h1>
+        <h1 className="text-3xl font-bold text-eco-green mb-2">Project RAG Chat</h1>
         <p className="text-gray-400 flex items-center gap-2">
            <Bot size={16} className="text-eco-green" /> 
            Query your ESG data using natural language.
@@ -52,8 +52,11 @@ export default function AskPage() {
       </div>
 
       {/* Main Chat Container */}
-      <div className="flex-1 bg-navy-800/50 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden flex flex-col shadow-[0_0_50px_rgba(16,185,129,0.05)] relative group">
+      <div className="flex-1 bg-[#0b0c0d]/80 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden flex flex-col shadow-[0_0_50px_rgba(16,185,129,0.05)] relative group">
         {/* Ambient Glow */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-[500px] h-[500px] rounded-full bg-emerald-500 blur-[120px] opacity-60" />
+        </div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-eco-green/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
         
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent relative z-10">

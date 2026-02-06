@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 import AppShell from '@/components/layout/AppShell';
+import Providers from '@/components/Providers';
 
 export default function RootLayout({
   children,
@@ -29,9 +30,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-navy-900`}
       >
-        <AppShell>
-           {children}
-        </AppShell>
+        <Providers>
+            <AppShell>
+               {children}
+            </AppShell>
+        </Providers>
       </body>
     </html>
   );

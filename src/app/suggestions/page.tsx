@@ -44,7 +44,9 @@ export default function SuggestionsPage() {
 
       {/* Top Section: Form + Sticky Tree */}
       <div className="flex flex-col xl:flex-row gap-8 items-start">
-         <div className="flex-1 w-full bg-navy-800/50 backdrop-blur-xl border border-white/5 p-8 rounded-3xl h-fit shadow-[0_4px_30px_rgba(0,0,0,0.2)]">
+         <div className="flex-1 w-full bg-[#0b0c0d]/80 backdrop-blur-xl border border-white/5 p-8 rounded-3xl h-fit shadow-[0_4px_30px_rgba(0,0,0,0.2)] relative overflow-hidden">
+
+           <div className="relative z-10">
            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
              <div className="p-2 bg-amber-400/10 rounded-lg">
                 <Zap className="text-amber-400" size={20} />
@@ -107,7 +109,8 @@ export default function SuggestionsPage() {
                 {loading ? 'Analyzing...' : 'Generate Suggestions'}
               </button>
            </form>
-        </div>
+           </div>
+         </div>
 
         {/* Right Side: Sticky Tree Visual */}
         <div className="xl:w-80 hidden xl:block flex-shrink-0">
@@ -124,20 +127,22 @@ export default function SuggestionsPage() {
       <div className="space-y-6">
             {result ? (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                 <div className="bg-navy-800/60 border border-white/5 p-8 rounded-3xl shadow-lg relative overflow-hidden group">
+                 <div className="bg-[#0b0c0d]/80 border border-white/5 p-8 rounded-3xl shadow-lg relative overflow-hidden group backdrop-blur-xl">
+
                      {/* Glossy gradient overlay */}
-                     <div className="absolute inset-0 bg-gradient-to-r from-eco-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                     <div className="absolute inset-0 bg-gradient-to-r from-eco-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none relative z-10" />
                      
-                     <h4 className="text-gray-400 text-sm uppercase tracking-wider mb-2 font-medium">Estimated Annual Impact</h4>
-                     <div className="text-5xl font-bold text-white flex items-end gap-2 tracking-tight">
+                     <h4 className="text-gray-400 text-sm uppercase tracking-wider mb-2 font-medium relative z-10">Estimated Annual Impact</h4>
+                     <div className="text-5xl font-bold text-white flex items-end gap-2 tracking-tight relative z-10">
                         {result.estimated_annual_co2_kgs} <span className="text-lg text-gray-500 mb-2">kg CO₂</span>
                      </div>
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                    {result.suggestions?.map((s: any, i: number) => (
-                     <div key={i} className="bg-navy-800/60 border border-white/5 p-6 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_40px_rgba(0,255,136,0.08)] hover:-translate-y-1 transition-all duration-300 group">
-                        <div className="flex justify-between items-start mb-4">
+                     <div key={i} className="bg-[#0b0c0d]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_40px_rgba(0,255,136,0.08)] hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+
+                        <div className="flex justify-between items-start mb-4 relative z-10">
                            <h4 className="font-bold text-eco-green text-lg group-hover:text-eco-light transition-colors">{s.title}</h4>
                            <span className="bg-eco-green/10 text-eco-green text-xs px-3 py-1 rounded-full border border-eco-green/10">
                              -{s.savings}

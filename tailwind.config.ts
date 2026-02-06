@@ -12,8 +12,8 @@ const config: Config = {
                 background: "var(--background)",
                 foreground: "var(--foreground)",
                 navy: {
-                    900: "#0a0f1c", // Very dark navy
-                    800: "#111827", // Slightly lighter
+                    900: "#000000", // Black
+                    800: "#121212", // Dark Grey
                     700: "#1f2937",
                 },
                 eco: {

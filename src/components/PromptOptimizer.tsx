@@ -65,8 +65,9 @@ export default function PromptOptimizer() {
     <div className="space-y-8">
         <div className="flex flex-col xl:flex-row gap-8 items-start">
             {/* Main Optimizer Panel */}
-            <div className="flex-1 w-full bg-navy-800/50 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-[0_4px_30px_rgba(0,0,0,0.2)] space-y-8 relative overflow-hidden group">
+            <div className="flex-1 w-full bg-[#0b0c0d]/80 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-[0_4px_30px_rgba(0,0,0,0.2)] space-y-8 relative overflow-hidden group">
                 {/* Background Glow */}
+
                 <div className="absolute top-0 right-0 w-80 h-80 bg-eco-green/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-eco-green/10 transition-colors duration-1000" />
 
                 <div className="flex items-center gap-4 relative z-10">

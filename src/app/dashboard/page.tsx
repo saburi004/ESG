@@ -7,7 +7,13 @@ import { RefreshCw, Play, Leaf, Zap, BarChart, ArrowRight } from 'lucide-react';
 import { PROJECTS } from '@/utils/constants';
 import Link from 'next/link';
 
+import { useSession } from 'next-auth/react';
+import RoomAdminView from '@/components/dashboard/RoomAdminView';
+
 export default function DashboardPage() {
+  const { data: session } = useSession();
+  const user = session?.user as any;
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState('');
@@ -123,6 +129,31 @@ export default function DashboardPage() {
     return 'D';
   };
 
+  // 🔒 ADMIN VIEW CHECK
+  if (user && user.role === 'ADMIN' && user.roomId) {
+      return (
+          <div className="max-w-full overflow-x-hidden">
+             <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold text-eco-green">Organization Dashboard</h1>
+                <button 
+                    onClick={runSimulation}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-medium shadow-lg transition-all"
+                >
+                    {simulating ? <RefreshCw className="animate-spin" size={16} /> : <Play size={16} />}
+                     Simulate Team Traffic
+                </button>
+             </div>
+             
+             <RoomAdminView user={user} />
+             
+             <div className="mt-12 pt-8 border-t border-white/5">
+                <h2 className="text-xl font-bold text-gray-400 mb-6">Your Personal Analytics</h2>
+                {/* Fall through to render normal dashboard below for personal view */}
+             </div>
+          </div>
+      );
+  }
+
   if (loading && !data) return <div className="text-gray-400 p-8 flex justify-center">Loading Dashboard...</div>;
 
   const projectOptions = data?.availableProjects || [];
@@ -133,7 +164,7 @@ export default function DashboardPage() {
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">ESG Analytics Cockpit</h1>
+          <h1 className="text-3xl font-bold text-eco-green mb-2">ESG Analytics Cockpit</h1>
           <p className="text-gray-400">Real-time monitoring of Generative AI Carbon Footprint</p>
         </div>
         <div className="flex gap-2">
@@ -158,7 +189,7 @@ export default function DashboardPage() {
              <div className="w-16 h-16 bg-eco-green/10 rounded-full flex items-center justify-center mb-4 ring-1 ring-eco-green/20">
                  <Zap className="text-eco-green" size={32} />
              </div>
-             <h2 className="text-2xl font-bold text-white mb-2">Establish Connection</h2>
+             <h2 className="text-2xl font-bold text-eco-green mb-2">Establish Connection</h2>
              <p className="text-gray-400 max-w-lg mb-6 leading-relaxed">
                 Connect your LLM provider to start tracking. Your dashboard awaits.
              </p>
@@ -196,12 +227,13 @@ export default function DashboardPage() {
               color: "text-purple-400" 
             },
         ].map((card, i) => (
-             <div key={i} className="bg-navy-800/60 backdrop-blur-md p-6 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group border border-white/5">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+             <div key={i} className="bg-[#0b0c0d]/80 backdrop-blur-xl p-6 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group border border-white/5">
+
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity duration-500 relative z-10">
                    <card.icon size={64} className={card.color} />
                 </div>
-                <h3 className="text-gray-400 text-sm font-medium mb-2 uppercase tracking-wide">{card.title}</h3>
-                <div className={`text-3xl font-bold ${card.color} font-mono`}>{card.value}</div>
+                <h3 className="text-gray-400 text-sm font-medium mb-2 uppercase tracking-wide relative z-10">{card.title}</h3>
+                <div className={`text-3xl font-bold ${card.color} font-mono relative z-10`}>{card.value}</div>
              </div>
         ))}
       </div>
@@ -209,9 +241,10 @@ export default function DashboardPage() {
        {/* Charts Section */}
        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Line Chart */}
-          <div className="lg:col-span-2 bg-navy-800/60 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-white/5 h-[400px] flex flex-col hover:shadow-md transition-shadow">
-             <h3 className="text-lg font-bold text-white mb-4">Carbon Emission Trends</h3>
-             <div className="flex-1 min-h-0">
+          <div className="lg:col-span-2 bg-[#0b0c0d]/80 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-white/5 h-[400px] flex flex-col hover:shadow-md transition-shadow relative overflow-hidden">
+
+             <h3 className="text-lg font-bold text-eco-green mb-4 relative z-10">Carbon Emission Trends</h3>
+             <div className="flex-1 min-h-0 relative z-10">
                {data?.history && data.history.length > 0 ? (
                   <UsageChart data={data.history.filter((h: any) => h && h.ts)} />
                ) : (
@@ -221,20 +254,24 @@ export default function DashboardPage() {
           </div>
           
           {/* Bar Chart */}
-          <div className="bg-navy-800/60 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-white/5 h-[400px] flex flex-col hover:shadow-md transition-shadow">
-             <h3 className="text-lg font-bold text-white mb-4">Project Impact Analysis</h3>
-             <div className="flex-1 min-h-0">
+          <div className="bg-[#0b0c0d]/80 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-white/5 h-[400px] flex flex-col hover:shadow-md transition-shadow relative overflow-hidden">
+
+             <h3 className="text-lg font-bold text-eco-green mb-4 relative z-10">Project Impact Analysis</h3>
+             <div className="flex-1 min-h-0 relative z-10">
                 <ProjectChart metrics={data?.projects || {}} />
              </div>
           </div>
        </div>
        
        {/* Carbon Accounting Engine */}
-       <div className="bg-navy-800/60 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-t-4 border-t-eco-green relative overflow-hidden">
+       <div className="bg-[#0b0c0d]/80 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-t-4 border-t-eco-green relative overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-[500px] h-[500px] rounded-full bg-emerald-500 blur-[120px] opacity-60" />
+          </div>
           <div className="absolute top-0 right-0 w-96 h-96 bg-eco-green/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 relative z-10">
              <div>
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <h3 className="text-xl font-bold text-eco-green flex items-center gap-2">
                    <Leaf className="text-eco-green" /> Carbon Accounting Engine
                 </h3>
                 <p className="text-sm text-gray-400">Monitor budget compliance for GHG Protocol Scope 3</p>

@@ -31,6 +31,11 @@ const ConnectedProjectSchema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    roomId: {
+        type: String,
+        index: true,
+        default: null
     }
 });
 

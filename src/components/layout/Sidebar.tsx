@@ -307,7 +307,7 @@ export default function Sidebar() {
   return (
     <aside 
       className={cn(
-        "h-screen bg-[#0a0f1c] shadow-[4px_0_30px_rgba(0,0,0,0.3)] transition-all duration-500 ease-in-out flex flex-col relative z-50 overflow-hidden",
+        "h-screen bg-black shadow-[4px_0_30px_rgba(0,0,0,0.3)] transition-all duration-500 ease-in-out flex flex-col relative z-50 overflow-hidden",
         collapsed ? "w-20" : "w-64"
       )}
       style={{
@@ -317,9 +317,10 @@ export default function Sidebar() {
       {/* Background Decorative Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Emerald Glow Orbs */}
-        <div className="absolute top-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
+        {/* Emerald Glow Orbs - Removed per user request */}
+        {/* <div className="absolute top-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 -right-10 w-32 h-32 bg-emerald-400/8 rounded-full blur-2xl animate-pulse delay-700"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl"></div> */}
       </div>
 
       {/* Climbing Vine Border Decoration */}
@@ -451,7 +452,7 @@ export default function Sidebar() {
       {/* Toggle Button */}
       <button 
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-24 bg-[#0a0f1c] border border-emerald-500/30 text-gray-400 rounded-full p-1.5 shadow-lg shadow-emerald-900/20 hover:text-eco-green hover:scale-110 hover:border-emerald-400/50 transition-all duration-300 transform z-50"
+        className="absolute -right-3 top-24 bg-black border border-emerald-500/30 text-gray-400 rounded-full p-1.5 shadow-lg shadow-emerald-900/20 hover:text-eco-green hover:scale-110 hover:border-emerald-400/50 transition-all duration-300 transform z-50"
       >
         {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>

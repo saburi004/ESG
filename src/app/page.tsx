@@ -36,13 +36,22 @@ export default function LandingPage() {
              Achieve net-zero goals with granular token-level energy auditing.
           </p>
 
-          <Link 
-            href="/auth/signup"
-            className="group flex items-center gap-3 px-8 py-4 bg-eco-green text-navy-900 font-bold rounded-full text-lg hover:bg-eco-light transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(0,255,136,0.4)]"
-          >
-             Get Started
-             <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-          </Link>
+          <div className="flex gap-4 justify-center">
+            <Link 
+              href="/auth/signup"
+              className="group flex items-center gap-3 px-8 py-4 bg-eco-green text-navy-900 font-bold rounded-full text-lg hover:bg-eco-light transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(0,255,136,0.4)]"
+            >
+              Get Started
+              <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+
+            <Link 
+              href="/room/create"
+              className="group flex items-center gap-3 px-8 py-4 border border-eco-green/50 text-eco-green font-bold rounded-full text-lg hover:bg-eco-green/10 transition-all transform hover:scale-105"
+            >
+              Create Room
+            </Link>
+          </div>
           
        </main>
 

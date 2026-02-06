@@ -23,6 +23,16 @@ const UserSchema = new Schema({
         type: Date,
         default: Date.now,
     },
+    role: {
+        type: String,
+        enum: ['ADMIN', 'MEMBER'],
+        default: 'MEMBER',
+    },
+    roomId: {
+        type: String,
+        index: true,
+        default: null,
+    },
 });
 
 const User = models.User || model('User', UserSchema);

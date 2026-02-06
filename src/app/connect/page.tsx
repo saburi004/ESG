@@ -52,7 +52,7 @@ export default function ConnectPage() {
          <div className="inline-flex items-center justify-center p-3 bg-eco-green/10 rounded-full mb-4 border border-eco-green/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
             <ShieldCheck className="text-eco-green" size={32} />
          </div>
-         <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Connect Your Data Source</h1>
+         <h1 className="text-4xl font-bold text-eco-green mb-2 tracking-tight">Connect Your Data Source</h1>
          <p className="text-gray-400 text-lg max-w-xl mx-auto">
             Securely integrate your LLM provider to start tracking real-time carbon metrics.
          </p>
