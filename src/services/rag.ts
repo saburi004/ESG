@@ -5,7 +5,7 @@ class RAGService {
     private static instance: RAGService;
     private extractor: any = null;
     private collectionName = 'esg_analysis';
-    private vectorSize = 384; // all-MiniLM-L6-v2 size
+    private vectorSize = 384;
 
     private constructor() { }
 
@@ -19,16 +19,12 @@ class RAGService {
     async init() {
         if (!this.extractor) {
             try {
-                // Use a quantized model for speed and low memory
                 this.extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
                 console.log("RAG Service: Model loaded");
             } catch (e) {
                 console.error("RAG Service: Failed to load model:", e);
-                // Fallback or re-throw? 
-                // For robustness, allow running without extractor but log error
             }
 
-            // Ensure Collection Exists
             try {
                 const collections = await qdrant.getCollections();
                 const exists = collections.collections.find(c => c.name === this.collectionName);
@@ -51,13 +47,21 @@ class RAGService {
     async getEmbedding(text: string): Promise<number[]> {
         if (!this.extractor) await this.init();
         if (!this.extractor) {
-            // Fallback: Random vector if model completely fails (Deployment safe)
-            // WARN: This makes search random.
+            // Fallback random vector
             return new Array(this.vectorSize).fill(0).map(() => Math.random());
         }
-
         const output = await this.extractor(text, { pooling: 'mean', normalize: true });
         return Array.from(output.data);
+    }
+
+    async getCollectionInfo() {
+        try {
+            const info = await qdrant.getCollection(this.collectionName);
+            return info;
+        } catch (e) {
+            console.error("RAG Service: Failed to get collection info:", e);
+            return null;
+        }
     }
 
     async upsertAnalysis(docId: string, text: string, metadata: any) {
@@ -68,10 +72,7 @@ class RAGService {
                 wait: true,
                 points: [
                     {
-                        id: docId, // Must be UUID or int. Text IDs? Qdrant supports UUID. 
-                        // If docId is not UUID, hash it or generate random UUID.
-                        // For simplicity, let's use a UUID based on timestamp/random if docID is not compliant.
-                        // But let's assume UUID is passed or we generate one.
+                        id: docId,
                         vector: vector,
                         payload: {
                             content: text,
@@ -80,7 +81,7 @@ class RAGService {
                     }
                 ]
             });
-            // console.log(`RAG Service: Upserted doc ${docId}`);
+            console.log(`RAG Service: Upserted doc ${docId} (Length: ${text.length})`);
         } catch (e) {
             console.error("RAG Service: Upsert failed:", e);
         }
@@ -88,6 +89,10 @@ class RAGService {
 
     async search(query: string, limit: number = 3) {
         try {
+            // Debug info
+            // const info = await this.getCollectionInfo();
+            // console.log(`RAG Service: Start Search. Collection Size: ${info?.points_count}`);
+
             const queryVector = await this.getEmbedding(query);
 
             const results = await qdrant.search(this.collectionName, {
@@ -96,6 +101,7 @@ class RAGService {
                 with_payload: true
             });
 
+            console.log(`RAG Service: Search found ${results.length} results.`);
             return results.map(r => ({
                 score: r.score,
                 content: r.payload?.content as string,

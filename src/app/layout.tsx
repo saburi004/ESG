@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: "Real-time carbon footprint tracking for Generative AI",
 };
 
-import Sidebar from '@/components/layout/Sidebar';
+import AppShell from '@/components/layout/AppShell';
 
 export default function RootLayout({
   children,
@@ -29,12 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-navy-900`}
       >
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto relative">
-             {children}
-          </main>
-        </div>
+        <AppShell>
+           {children}
+        </AppShell>
       </body>
     </html>
   );

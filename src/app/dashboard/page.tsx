@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import { UsageChart } from '@/components/charts/UsageChart';
 import { ProjectChart } from '@/components/charts/ProjectChart';
-import { RefreshCw, Play, Leaf, Zap, BarChart } from 'lucide-react';
+import { RefreshCw, Play, Leaf, Zap, BarChart, ArrowRight } from 'lucide-react';
 import { PROJECTS } from '@/utils/constants';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedProject, setSelectedProject] = useState(PROJECTS[0].name);
+  const [selectedProject, setSelectedProject] = useState('');
   const [simulating, setSimulating] = useState(false);
 
   // Poll for data
@@ -19,6 +20,13 @@ export default function DashboardPage() {
       if (res.ok) {
         const json = await res.json();
         setData(json);
+        
+        // Auto-select first project if none selected or current selection invalid
+        if (json.availableProjects && json.availableProjects.length > 0) {
+            if (!selectedProject || !json.availableProjects.includes(selectedProject)) {
+                setSelectedProject(json.availableProjects[0]);
+            }
+        }
       }
     } catch (e) {
       console.error(e);
@@ -42,10 +50,18 @@ export default function DashboardPage() {
   }, []);
 
   const runSimulation = async () => {
+    // block simulation if no projects
+    if (!data?.availableProjects?.length && !data?.global?.requests) return;
+
     setSimulating(true);
     try {
+      // Run Traffic Gen
       await fetch('/api/cron/traffic');
-      // Wait for Redis to settle, then fetch fresh data
+      
+      // Also Sync Connected Projects
+      await fetch('/api/connect/sync', { method: 'POST' });
+
+      // Wait for DB/Redis to settle, then fetch fresh data
       setTimeout(() => {
         fetchData(); 
       }, 1000);
@@ -90,12 +106,13 @@ export default function DashboardPage() {
   };
 
   const getProjectMetrics = (projectName: string) => {
-    if (!data?.projects) return { co2: 0, energy: 0, tokens: 0 };
+    if (!data?.projects || !projectName) return { co2: 0, energy: 0, tokens: 0 };
     return data.projects[projectName] || { co2: 0, energy: 0, tokens: 0 };
   };
 
   const currentProjectMetrics = getProjectMetrics(selectedProject);
-  const budget = 250; // Mock Budget 250g CO2 (Lowered for visibility)
+  const budget = 250; 
+  // Ensure percentage is at least 0. If data is 0, it's 0.
   const usagePercent = Math.min((currentProjectMetrics.co2 / budget) * 100, 100);
 
   // Sustainability Score Logic
@@ -106,10 +123,12 @@ export default function DashboardPage() {
     return 'D';
   };
 
-  if (loading && !data) return <div className="text-gray-400 p-8">Loading Dashboard...</div>;
+  if (loading && !data) return <div className="text-gray-400 p-8 flex justify-center">Loading Dashboard...</div>;
+
+  const projectOptions = data?.availableProjects || [];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 overflow-x-hidden max-w-full">
       
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -117,19 +136,37 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold text-white mb-2">ESG Analytics Cockpit</h1>
           <p className="text-gray-400">Real-time monitoring of Generative AI Carbon Footprint</p>
         </div>
-        <button 
-          onClick={runSimulation}
-          disabled={simulating}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
-             simulating 
-               ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
-               : 'bg-eco-green text-navy-900 hover:bg-eco-light shadow-[0_0_15px_rgba(0,255,136,0.3)]'
-          }`}
-        >
-          {simulating ? <RefreshCw className="animate-spin" size={18} /> : <Play size={18} />}
-          {simulating ? 'Simulating Traffic...' : 'Simulate Live Traffic'}
-        </button>
+        <div className="flex gap-2">
+            <button 
+              onClick={runSimulation}
+              disabled={simulating || (!data?.availableProjects?.length && !data?.global?.requests)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
+                 simulating || (!data?.availableProjects?.length && !data?.global?.requests)
+                   ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                   : 'bg-eco-green text-navy-900 hover:bg-eco-light shadow-[0_0_15px_rgba(0,255,136,0.3)]'
+              }`}
+            >
+              {simulating ? <RefreshCw className="animate-spin" size={18} /> : <Play size={18} />}
+              {simulating ? 'Simulating...' : 'Simulate Traffic'}
+            </button>
+        </div>
       </div>
+
+      {/* Empty State / Connect Prompt for Non-Admin with no projects */}
+      {(!data?.availableProjects || data.availableProjects.length === 0) && (
+          <div className="bg-navy-800/80 border border-eco-green/30 p-8 rounded-2xl flex flex-col items-center text-center animate-in fade-in zoom-in duration-500">
+             <div className="w-16 h-16 bg-eco-green/10 rounded-full flex items-center justify-center mb-4">
+                 <Zap className="text-eco-green" size={32} />
+             </div>
+             <h2 className="text-2xl font-bold text-white mb-2">Establish Connection</h2>
+             <p className="text-gray-400 max-w-lg mb-6">
+                No active projects detected. Connect your LLM provider (OpenAI, Groq) to start tracking carbon emissions and energy usage instantly.
+             </p>
+             <Link href="/connect" className="bg-eco-green text-navy-900 hover:bg-eco-light px-6 py-3 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2">
+                 Connect Project <ArrowRight size={18} />
+             </Link>
+          </div>
+      )}
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -176,9 +213,9 @@ export default function DashboardPage() {
              <h3 className="text-lg font-bold text-white mb-4">Carbon Emission Trends</h3>
              <div className="flex-1 min-h-0">
                {data?.history && data.history.length > 0 ? (
-                  <UsageChart data={data.history.map((h: any) => typeof h === 'string' ? JSON.parse(h) : h).filter((h: any) => h && h.ts)} />
+                  <UsageChart data={data.history.filter((h: any) => h && h.ts)} />
                ) : (
-                  <div className="h-full flex items-center justify-center text-gray-500">No history data yet</div>
+                  <div className="h-full flex items-center justify-center text-gray-500">No history data available for your projects.</div>
                )}
              </div>
           </div>
@@ -204,15 +241,20 @@ export default function DashboardPage() {
              
              <div className="flex items-center gap-2">
                <span className="text-gray-400 text-sm">Select Project:</span>
-               <select 
-                 value={selectedProject}
-                 onChange={(e) => setSelectedProject(e.target.value)}
-                 className="bg-navy-900 border border-navy-600 text-white rounded-lg px-3 py-1 text-sm focus:border-eco-green outline-none"
-               >
-                 {PROJECTS.map(p => (
-                   <option key={p.id} value={p.name}>{p.name}</option>
-                 ))}
-               </select>
+               
+               {projectOptions.length > 0 ? (
+                   <select 
+                     value={selectedProject}
+                     onChange={(e) => setSelectedProject(e.target.value)}
+                     className="bg-navy-900 border border-navy-600 text-white rounded-lg px-3 py-1 text-sm focus:border-eco-green outline-none min-w-[200px]"
+                   >
+                     {projectOptions.map((p: string) => (
+                       <option key={p} value={p}>{p}</option>
+                     ))}
+                   </select>
+               ) : (
+                    <span className="text-gray-500 text-sm italic">No Projects Connected</span>
+               )}
              </div>
           </div>
           
@@ -225,12 +267,13 @@ export default function DashboardPage() {
                       {usagePercent.toFixed(1)}% Used
                     </span>
                  </div>
-                 <div className="w-full h-4 bg-navy-900 rounded-full overflow-hidden border border-navy-600">
+                 {/* Fixed: Removed extra borders and ensured width is correct */}
+                 <div className="w-full h-4 bg-navy-900 rounded-full overflow-hidden border border-navy-600 relative">
                     <div 
                       className={`h-full rounded-full transition-all duration-1000 ${
                         usagePercent > 80 ? 'bg-red-500' : 'bg-eco-green'
                       }`}
-                      style={{ width: `${usagePercent}%` }}
+                      style={{ width: `${Math.max(usagePercent, 2)}%` /* Min 2% visibility */ }}
                     />
                  </div>
                  <div className="flex justify-between text-xs text-gray-500">
@@ -269,5 +312,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-import { ArrowRight } from 'lucide-react';

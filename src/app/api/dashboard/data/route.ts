@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import DashboardData from '@/models/DashboardData';
+import ConnectedProject from '@/models/ConnectedProject';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,9 +14,7 @@ export async function GET() {
         const session = await getServerSession(authOptions);
         const userEmail = session?.user?.email;
 
-        // Access Control: Only saburinikam@gmail.com can see project data
-        // Other users (or no session) see empty data
-        if (userEmail !== 'saburinikam@gmail.com') {
+        if (!userEmail) {
             return NextResponse.json({
                 global: { co2: 0, energy: 0, tokens: 0, requests: 0 },
                 projects: {},
@@ -23,10 +22,11 @@ export async function GET() {
             });
         }
 
-        // Fetch History from MongoDB (Last 12 hours max, sorted by time)
         await dbConnect();
+
+        // 1. Fetch User's Dashboard History (for charts)
         const mongoHistory = await DashboardData.find({ userEmail })
-            .sort({ timestamp: 1 }) // Oldest to Newest
+            .sort({ timestamp: 1 })
             .select('timestamp global.co2 global.tokens -_id')
             .lean();
 
@@ -37,81 +37,69 @@ export async function GET() {
             tokens: h.global?.tokens || 0
         }));
 
-        // Get Real-time Globals (Mixed approach: Real-time from Redis for counters, History from Mongo)
-        // Ideally we should aggregate Mongo, but for "live" feel we can keep Redis counters 
-        // OR aggregate Mongo. Let's aggregate Mongo for "genuine stored analysis".
-        // HOWEVER, aggregating might be slow.
-        // Let's use Redis for the "Global Metrics" cards (fast counters) and Mongo for the "History" chart.
-        // Actually, user said "dashboard analysis... should be store on mongo db... if other person logs in dashboard should be empty".
-        // This implies the *whole* dashboard should reflect the user's data.
-
-        // Let's fetch the latest metrics from Mongo (Snapshot) or keep Redis for performance?
-        // User wants "visible only for login...". Redis is global. 
-        // So we MUST use MongoDB aggregations or just the last record if we want true isolation.
-        // But the counters are cumulative.
-        // Let's stick to Redis for global counters (simulating a shared system view BUT restricted by user?)
-        // Wait, "if other person logs in the dashboard should be empty". 
-        // This implies the DATA is personal. 
-        // So I should calculate totals from MongoDB for this user.
-
-        // Aggregate totals for this user
-        // Note: This might be heavy if many records. For hackathon/demo with TTL 12h it's fine.
-        /* 
-           Using Redis for the Counters is "System Status". 
-           The prompt implies "My Dashboard".
-           Let's fetch the Aggregated totals from Mongo.
-        */
-
-        // Simple aggregation or sum in code (since we fetched history but only selected fields previously)
-        // Let's do a separate aggregation for totals
-        const totals = await DashboardData.aggregate([
-            { $match: { userEmail } },
-            {
-                $group: {
-                    _id: null,
-                    co2: { $sum: "$global.co2" },
-                    energy: { $sum: "$global.energy" },
-                    tokens: { $sum: "$global.tokens" },
-                    requests: { $sum: "$global.requests" }
-                }
-            }
-        ]);
-
-        const aggregatedGlobal = totals[0] || { co2: 0, energy: 0, tokens: 0, requests: 0 };
-
-        // We also need per-project breakdown for the Bar Chart
-        // We can get the latest breakdown or aggregate. 
-        // Aggregating per project:
-        // We stored "projects" as a Map in Mongo. Aggregating dynamic keys is tricky.
-        // We can just fetch all and reduce in JS (12h data is small enough).
-
-        const allData = await DashboardData.find({ userEmail }).lean();
+        // 2. Determine Visible Projects
+        let visibleProjects: string[] = [];
         const projectMetrics: Record<string, any> = {};
 
+        // If Admin, include Static Projects
+        if (userEmail === 'saburinikam@gmail.com') {
+            PROJECTS.forEach(p => {
+                visibleProjects.push(p.name);
+                projectMetrics[p.name] = { co2: 0, energy: 0, tokens: 0, requests: 0 };
+            });
+        }
+
+        // 3. Fetch Connected Projects (To ensure visibility even without history)
+        const connectedProjs = await ConnectedProject.find({ userEmail, isActive: true }).lean();
+        connectedProjs.forEach((p: any) => {
+            visibleProjects.push(p.projectName);
+            // Initialize with zero
+            if (!projectMetrics[p.projectName]) {
+                projectMetrics[p.projectName] = { co2: 0, energy: 0, tokens: 0, requests: 0 };
+            }
+        });
+
+        // 4. Fetch Aggregated Metrics from DashboardData
+        // We accumulate data into projectMetrics.
+
+        const allData = await DashboardData.find({ userEmail }).lean();
+
+        let totalGlobalRequests = 0; // Accumulate from global field for backward compatibility
+
         allData.forEach((d: any) => {
+            // Sum global requests from the document (which TrafficGen always populated correctly)
+            totalGlobalRequests += d.global?.requests || 0;
+
             if (d.projects) {
                 Object.keys(d.projects).forEach(pKey => {
                     if (!projectMetrics[pKey]) {
-                        projectMetrics[pKey] = { co2: 0, energy: 0, tokens: 0 };
+                        projectMetrics[pKey] = { co2: 0, energy: 0, tokens: 0, requests: 0 };
+                        // In case historical data found but project was deleted/inactive? 
+                        // We still show it if it has data.
+                        visibleProjects.push(pKey);
                     }
                     projectMetrics[pKey].co2 += d.projects[pKey].co2 || 0;
                     projectMetrics[pKey].energy += d.projects[pKey].energy || 0;
                     projectMetrics[pKey].tokens += d.projects[pKey].tokens || 0;
+                    projectMetrics[pKey].requests = (projectMetrics[pKey].requests || 0) + (d.projects[pKey].requests || 0);
                 });
             }
         });
 
-        // Ensure all constants projects exist
-        PROJECTS.forEach(p => {
-            if (!projectMetrics[p.name]) {
-                projectMetrics[p.name] = { co2: 0, energy: 0, tokens: 0 };
-            }
-        });
+        // 5. Calculate Global Totals
+        // Use totalGlobalRequests for requests to ensure we capture historical data where project.requests was missing
+        const aggregatedGlobal = {
+            co2: Object.values(projectMetrics).reduce((a: any, b: any) => a + b.co2, 0),
+            energy: Object.values(projectMetrics).reduce((a: any, b: any) => a + b.energy, 0),
+            tokens: Object.values(projectMetrics).reduce((a: any, b: any) => a + b.tokens, 0),
+            requests: totalGlobalRequests
+        };
 
         return NextResponse.json({
             global: aggregatedGlobal,
             projects: projectMetrics,
-            history: history // Already sorted
+            availableProjects: Array.from(new Set(visibleProjects)), // Unique list
+            history: history
         });
 
     } catch (error) {
