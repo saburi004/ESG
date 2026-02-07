@@ -17,6 +17,7 @@ services:
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
       - GROQ_API_KEY=${GROQ_API_KEY}
       - EMBER_API_KEY=${EMBER_API_KEY}
+      - HF_TOKEN=${HF_TOKEN}
 
       # Force internal service URLs for Docker, ignoring local .env 'localhost' values
       - QDRANT_URL=http://qdrant:6333
