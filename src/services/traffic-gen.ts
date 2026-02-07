@@ -4,6 +4,7 @@ import { CarbonService } from './carbon';
 import Groq from 'groq-sdk';
 import dbConnect from '@/lib/db';
 import DashboardData from '@/models/DashboardData';
+import crypto from 'crypto';
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY || 'gsk_dummy',
@@ -105,43 +106,58 @@ export class TrafficSimulator {
                 // RAG Integration: Upsert detailed text description into Qdrant
                 try {
                     const { ragService } = await import('./rag');
+                    // Ensure full init, including local model loading
                     await ragService.init();
 
                     // Create meaningful text chunks for RAG
+                    // Use local time for clarity in RAG responses so user recognizes "now"
                     const timestampStr = new Date().toLocaleString();
                     const descriptions = [];
 
                     // 1. Global Summary
-                    descriptions.push(`At ${timestampStr}, the total system CO2 emission was ${globalCo2.toFixed(2)}g and energy consumption was ${globalEnergy.toFixed(6)}kWh across ${globalRequests} requests processing ${globalTokens} tokens.`);
+                    descriptions.push(`[Global Simulation Report] Timestamp: ${timestampStr}. Total CO2: ${globalCo2.toFixed(2)}g. Total Energy: ${globalEnergy.toFixed(6)}kWh. Total Tokens: ${globalTokens}. Total Requests: ${globalRequests}.`);
 
-                    // 2. Project Summaries
+                    // 2. Project Summaries (CSV-like format included for structured search)
+                    // CSV Header: Timestamp,Project,Model,Energy(kWh),CO2(g),Tokens
                     for (const p of PROJECTS) {
                         const m = projectMetrics[p.name];
                         if (m && m.tokens > 0) {
-                            descriptions.push(`At ${timestampStr}, project "${p.name}" (Model: ${p.model}) consumed ${m.energy.toFixed(6)}kWh energy and emitted ${m.co2.toFixed(2)}g CO2 for ${m.tokens} tokens.`);
+                            // Natural Language Description
+                            const desc = `At ${timestampStr}, project "${p.name}" (Model: ${p.model}) consumed ${m.energy.toFixed(6)}kWh energy and emitted ${m.co2.toFixed(2)}g CO2 for ${m.tokens} tokens.`;
+
+                            // CSV Format for data-centric retrieval
+                            const csvLine = `CSV_DATA: ${timestampStr},${p.name},${p.model},${m.energy.toFixed(6)},${m.co2.toFixed(2)},${m.tokens}`;
+
+                            descriptions.push(`${desc}\n${csvLine}`);
                         }
                     }
 
                     // Upsert each chunk
                     for (const desc of descriptions) {
-                        // Simple pseudo-ID
                         const docId = crypto.randomUUID();
                         await ragService.upsertAnalysis(docId, desc, {
                             source: 'simulation',
                             userEmail,
-                            timestamp: Date.now()
+                            timestamp: Date.now(),
+                            type: 'traffic-report'
                         });
                     }
+                    console.log(`Traffic Gen: Successfully upserted ${descriptions.length} records to RAG.`);
+
+                    // Return enhanced result
+                    return { results, ragSuccess: true, ragCount: descriptions.length };
+
                 } catch (ragErr) {
                     console.error("Traffic Gen: RAG Upsert Error:", ragErr);
+                    return { results, ragSuccess: false, ragError: String(ragErr) };
                 }
-
             } catch (err) {
                 console.error("Traffic Gen: Failed to save to MongoDB:", err);
+                return { results, error: String(err) };
             }
         }
 
-        return results;
+        return { results, ragSuccess: false, note: "No user email or no results" };
     }
 
     private static shouldFireRequest(usage: string): boolean {

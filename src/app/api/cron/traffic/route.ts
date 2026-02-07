@@ -13,11 +13,14 @@ export async function GET() {
         // If no user, we might mock a generic run or skip DB save
         // But for this use case, we simulate for the logged in user
 
-        const results = await TrafficSimulator.simulateTraffic(userEmail || undefined);
+        const result = await TrafficSimulator.simulateTraffic(userEmail || undefined);
         return NextResponse.json({
             message: 'Traffic Simulation Run',
-            generated: results.length,
-            details: results
+            generated: result.results?.length || 0,
+            details: result,
+            ragStatus: result.ragSuccess
+                ? `Stored ${result.ragCount} records in Vector DB`
+                : `RAG Skipped: ${result.note || result.error || result.ragError || 'No data generated or User not logged in'}`
         });
     } catch (error) {
         console.error("Simulation Error:", error);

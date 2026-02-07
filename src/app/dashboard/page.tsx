@@ -62,8 +62,14 @@ export default function DashboardPage() {
     setSimulating(true);
     try {
       // Run Traffic Gen
-      await fetch('/api/cron/traffic');
+      const res = await fetch('/api/cron/traffic');
+      const json = await res.json();
       
+      if (res.ok && json.ragStatus) {
+           // Simple debug feedback as requested
+           alert(`Simulation Complete!\n\n${json.ragStatus}\nGenerated ${json.generated} data points.`);
+      }
+
       // Also Sync Connected Projects
       await fetch('/api/connect/sync', { method: 'POST' });
 
@@ -73,6 +79,7 @@ export default function DashboardPage() {
       }, 1000);
     } catch (e) {
       console.error(e);
+      alert("Simulation failed to run.");
     } finally {
         // Stop spinning after a delay to ensure data load is visible
         setTimeout(() => setSimulating(false), 1500);

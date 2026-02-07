@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Qdrant runtime storage (DO NOT COMMIT)
+docker/qdrant_storage/
+**/qdrant_storage/
+
+# Qdrant internal files
+**/payload_index/
+**/segments/
+**/collections/
+
+# Docker volumes & runtime data
+docker/data/
+docker/volumes/
