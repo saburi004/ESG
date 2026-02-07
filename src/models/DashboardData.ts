@@ -26,8 +26,8 @@ const DashboardDataSchema = new Schema({
     }
 });
 
-// TTL Index: Expire documents after 12 hours (43200 seconds)
-DashboardDataSchema.index({ timestamp: 1 }, { expireAfterSeconds: 43200 });
+// TTL Index: Expire documents after 3 days (259200 seconds)
+DashboardDataSchema.index({ timestamp: 1 }, { expireAfterSeconds: 259200 });
 
 const DashboardData = models.DashboardData || model('DashboardData', DashboardDataSchema);
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 import { MODEL_ENERGY_ESTIMATES, REGIONS } from '@/utils/constants';
 import { EmberService } from '@/services/ember';
+import { rateLimit } from '@/lib/rate-limit';
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY_SUGGESTIONS || process.env.GROQ_API_KEY,
@@ -13,6 +14,18 @@ export async function POST(req: Request) {
         if (!apiKey) {
             throw new Error('GROQ_API_KEY_SUGGESTIONS or GROQ_API_KEY is missing');
         }
+
+        // Rate Limiting
+        const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+        const { success } = await rateLimit(ip);
+
+        if (!success) {
+            return NextResponse.json(
+                { error: "Too many requests. Please wait a moment." },
+                { status: 429 }
+            );
+        }
+
         const { model, region, priority, requestsPerDay, gpu } = await req.json();
 
         // 1. Fetch Real-Time/Yearly Carbon Intensity from Ember

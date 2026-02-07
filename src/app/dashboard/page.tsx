@@ -201,6 +201,9 @@ export default function DashboardPage() {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-[500px] h-[500px] rounded-full bg-emerald-500 blur-[200px] opacity-30" />
+        </div>
         {[
             { 
               title: "Total CO₂ Emissions", 
@@ -265,9 +268,9 @@ export default function DashboardPage() {
        
        {/* Carbon Accounting Engine */}
        <div className="bg-[#0b0c0d]/80 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-t-4 border-t-eco-green relative overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {/* <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="w-[500px] h-[500px] rounded-full bg-emerald-500 blur-[120px] opacity-60" />
-          </div>
+          </div> */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-eco-green/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 relative z-10">
              <div>

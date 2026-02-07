@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 // import qdrant from '@/lib/qdrant';
 import { PROJECTS } from '@/utils/constants';
+import { rateLimit } from '@/lib/rate-limit';
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
@@ -12,6 +13,18 @@ export async function POST(req: Request) {
         if (!process.env.GROQ_API_KEY) {
             throw new Error('GROQ_API_KEY is missing');
         }
+
+        // Rate Limiting
+        const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+        const { success } = await rateLimit(ip);
+
+        if (!success) {
+            return NextResponse.json(
+                { error: "Too many requests. Please wait a moment." },
+                { status: 429 }
+            );
+        }
+
         const { message } = await req.json();
 
         // 1. Retrieve relevant context using RAG Service

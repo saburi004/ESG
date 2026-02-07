@@ -1,174 +1,233 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { MODEL_ENERGY_ESTIMATES, REGIONS } from '@/utils/constants';
-import { Sparkles, ArrowRight, Zap, Leaf } from 'lucide-react';
+import { Plus, Sparkles, Leaf, Zap } from 'lucide-react';
 import PromptOptimizer from '@/components/PromptOptimizer';
-import TreeVisual from '@/components/TreeVisual';
+import ScenarioBuilder from '@/components/ScenarioBuilder';
+import CarbonMeter from '@/components/CarbonMeter';
+
+interface Scenario {
+  id: string;
+  model: string;
+  region: string;
+  requestsPerDay: number;
+  isExpanded?: boolean;
+}
 
 export default function SuggestionsPage() {
-  const [formData, setFormData] = useState({
-    model: 'GPT-4',
-    region: 'us-east-1',
-    priority: 'Sustainability',
-    requestsPerDay: 1000,
-    gpu: 'A100',
-  });
-  
-  const [result, setResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [scenarios, setScenarios] = useState<Scenario[]>([
+    { id: 'A', model: 'GPT-4', region: 'us-east-1', requestsPerDay: 1000, isExpanded: true }
+  ]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch('/api/suggestions', {
-        method: 'POST',
-        body: JSON.stringify(formData),
-      });
-      const json = await res.json();
-      setResult(json);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const updateScenario = (updated: Scenario) => {
+    setScenarios(prev => prev.map(s => s.id === updated.id ? updated : s));
+  };
+
+  const toggleScenario = (id: string) => {
+    setScenarios(prev => prev.map(s => s.id === id ? { ...s, isExpanded: !s.isExpanded } : s));
+  };
+
+  const addScenario = () => {
+    if (scenarios.length < 2) {
+      setScenarios([...scenarios, { 
+        id: 'B', 
+        model: 'LLaMA3_small', 
+        region: 'eu-north-1', 
+        requestsPerDay: 1000,
+        isExpanded: false // Start collapsed
+      }]);
     }
   };
 
+  const removeScenario = (id: string) => {
+    setScenarios(prev => prev.filter(s => s.id !== id));
+  };
+
+  // ... (metrics calculation remains same)
+  const calculateMetrics = (s: Scenario) => {
+     const modelData = MODEL_ENERGY_ESTIMATES[s.model];
+     const regionData = REGIONS.find(r => r.id === s.region);
+     
+     if (!modelData || !regionData) return { annualCO2: 0, score: 0 };
+
+     const dailyEnergy_kWh = s.requestsPerDay * modelData.energyPerResponse_kWh;
+     const dailyCO2_g = dailyEnergy_kWh * regionData.carbonIntensity;
+     const annualCO2_kg = (dailyCO2_g * 365) / 1000;
+
+     // Normalize score (0-100)
+     const score = Math.min(100, (annualCO2_kg / 1000) * 100);
+
+     return { annualCO2: annualCO2_kg, score };
+  };
+
+  const metricsA = calculateMetrics(scenarios[0]);
+  const metricsB = scenarios.length > 1 ? calculateMetrics(scenarios[1]) : null;
+
+  // Calculate Delta if B exists
+  const delta = metricsB ? ((metricsB.annualCO2 - metricsA.annualCO2) / metricsA.annualCO2) * 100 : undefined;
+
+  // ... (insights generation remains same)
+  const insights = useMemo(() => {
+    const s = scenarios[0];
+    const tips = [];
+    
+    // Region Tip
+    const currentRegion = REGIONS.find(r => r.id === s.region);
+    if (currentRegion && currentRegion.carbonIntensity > 200) {
+       const bestRegion = REGIONS.reduce((prev, curr) => prev.carbonIntensity < curr.carbonIntensity ? prev : curr);
+       tips.push({
+         type: 'critical',
+         title: 'High Carbon Intensity Region',
+         text: `Your selected region (${currentRegion.name}) has high carbon intensity (${currentRegion.carbonIntensity}g). Switching to ${bestRegion.name} could reduce emissions by ${Math.round((1 - bestRegion.carbonIntensity/currentRegion.carbonIntensity)*100)}%.`
+       });
+    }
+
+    // Model Tip
+    if (s.model.includes('GPT-4') && s.requestsPerDay > 5000) {
+       tips.push({
+         type: 'warning',
+         title: 'Heavy Model for High Traffic',
+         text: "Using GPT-4 for high-volume traffic is energy efficient. Consider a hybrid approach: use LLaMA3-Small for simple queries to cut energy by ~90%."
+       });
+    }
+
+    // General Tip
+    if (s.requestsPerDay > 10000) {
+      tips.push({
+        type: 'info',
+        title: 'Batch Processing Recommended',
+        text: "At this scale, running non-urgent inference jobs during 'green energy windows' (usually night time) can significantly lower net carbon footprint."
+      });
+    }
+
+    return tips;
+  }, [scenarios]);
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="mt-8">
-        <h1 className="text-3xl font-bold text-white mb-2">AI Sustainability Optimizer</h1>
-        <p className="text-gray-400">Get AI-driven recommendations to reduce your carbon footprint.</p>
+    <div className="max-w-7xl mx-auto space-y-8 pb-20">
+      
+      {/* Header */}
+      <div className="mt-8 mb-12 text-center">
+        <h1 className="text-4xl font-bold text-white mb-3">PlayGround</h1>
+        <p className="text-gray-400 max-w-2xl mx-auto">
+           Design your AI architecture visually. Compare models, regions, and traffic loads to see real-time carbon impact.
+        </p>
       </div>
 
-      {/* Top Section: Form + Sticky Tree */}
       <div className="flex flex-col xl:flex-row gap-8 items-start">
-         <div className="flex-1 w-full bg-[#0b0c0d]/80 backdrop-blur-xl border border-white/5 p-8 rounded-3xl h-fit shadow-[0_4px_30px_rgba(0,0,0,0.2)] relative overflow-hidden">
+           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-[500px] h-[500px] rounded-full bg-emerald-500 blur-[200px] opacity-20" />
+        </div>
+         {/* Left Side: Scenario Builders + Insights */}
+         <div className="flex-1 w-full space-y-8">
+            
+            {/* Scenarios Flex Container (Variable Widths) */}
+            <div className="flex flex-col lg:flex-row gap-6">
+               {scenarios.map((scenario, index) => (
+                 <div 
+                   key={scenario.id} 
+                   className={`transition-all duration-500 ease-in-out ${
+                     scenario.isExpanded ? 'flex-[3]' : 'flex-[0.5] min-w-[60px] lg:max-w-[80px]'
+                   }`}
+                 >
+                    <ScenarioBuilder 
+                      data={scenario} 
+                      onChange={updateScenario} 
+                      onRemove={index > 0 ? () => removeScenario(scenario.id) : undefined}
+                      isComparison={index > 0}
+                      isExpanded={scenario.isExpanded}
+                      onToggle={() => toggleScenario(scenario.id)}
+                    />
+                 </div>
+               ))}
 
-           <div className="relative z-10">
-           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-             <div className="p-2 bg-amber-400/10 rounded-lg">
-                <Zap className="text-amber-400" size={20} />
-             </div>
-             AI Config
-           </h3>
-           
-           <form onSubmit={handleSubmit} className="space-y-4">
-             <div>
-               <label className="block text-sm text-gray-400 mb-1">Model</label>
-               <select 
-                 className="w-full bg-navy-950/50 border border-white/10 rounded-xl p-3 text-white focus:ring-1 focus:ring-eco-green focus:border-eco-green backdrop-blur-md transition-all outline-none"
-                 value={formData.model}
-                 onChange={e => setFormData({...formData, model: e.target.value})}
-               >
-                 {Object.keys(MODEL_ENERGY_ESTIMATES).map(m => <option key={m} value={m}>{m}</option>)}
-               </select>
-             </div>
+               {/* Add Comparison Button */}
+               {scenarios.length < 2 && (
+                 <button 
+                   onClick={addScenario}
+                   className="flex-1 min-h-[300px] border-2 border-dashed border-white/10 rounded-3xl hover:border-white/30 hover:bg-white/5 transition-all group flex flex-col items-center justify-center p-8"
+                 >
+                    <div className="p-4 bg-white/5 rounded-full group-hover:scale-110 transition-transform mb-3">
+                       <Plus className="text-gray-400 group-hover:text-white" size={32} />
+                    </div>
+                    <span className="text-lg font-medium text-gray-500 group-hover:text-gray-300">Add Comparison Scenario</span>
+                 </button>
+               )}
+            </div>
 
-             <div>
-               <label className="block text-sm text-gray-400 mb-1">Region</label>
-               <select 
-                 className="w-full bg-navy-950/50 border border-white/10 rounded-xl p-3 text-white focus:ring-1 focus:ring-eco-green focus:border-eco-green backdrop-blur-md transition-all outline-none"
-                 value={formData.region}
-                 onChange={e => setFormData({...formData, region: e.target.value})}
-               >
-                 {REGIONS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-               </select>
-             </div>
+            {/* AI Insights Section (Below Blocks) */}
+            <div className="bg-[#0b0c0d]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+                
+                <h3 className="text-xl font-bold flex items-center gap-2 mb-6 text-white">
+                  <Sparkles className="text-purple-400" /> 
+                  AI Sustainability Insights
+                </h3>
 
-             <div>
-               <label className="block text-sm text-gray-400 mb-1">Priority</label>
-               <select 
-                 className="w-full bg-navy-950/50 border border-white/10 rounded-xl p-3 text-white focus:ring-1 focus:ring-eco-green focus:border-eco-green backdrop-blur-md transition-all outline-none"
-                 value={formData.priority}
-                 onChange={e => setFormData({...formData, priority: e.target.value})}
-               >
-                 <option>Sustainability</option>
-                 <option>Cost</option>
-                 <option>Performance</option>
-               </select>
-             </div>
+                <div className="grid gap-4">
+                  {insights.length > 0 ? insights.map((insight, i) => (
+                    <div key={i} className={`p-4 rounded-2xl border flex gap-4 ${
+                      insight.type === 'critical' ? 'bg-red-500/10 border-red-500/20' :
+                      insight.type === 'warning' ? 'bg-amber-500/10 border-amber-500/20' :
+                      'bg-blue-500/10 border-blue-500/20'
+                    }`}>
+                       <div className={`mt-1 bg-black/20 p-2 rounded-lg h-fit ${
+                          insight.type === 'critical' ? 'text-red-400' :
+                          insight.type === 'warning' ? 'text-amber-400' :
+                          'text-blue-400'
+                       }`}>
+                          {insight.type === 'critical' && <Leaf size={20} />}
+                          {insight.type === 'warning' && <Zap size={20} />}
+                          {insight.type === 'info' && <Sparkles size={20} />}
+                       </div>
+                       <div>
+                          <h4 className="font-bold text-gray-200 text-sm mb-1">{insight.title}</h4>
+                          <p className="text-sm text-gray-400 leading-relaxed">{insight.text}</p>
+                       </div>
+                    </div>
+                  )) : (
+                    <div className="text-gray-500 italic text-center py-4">Configuration looks optimal! No critical improvements found.</div>
+                  )}
+                </div>
+            </div>
 
-             <div>
-               <label className="block text-sm text-gray-400 mb-1">Avg Requests / Day</label>
-               <input 
-                 type="number" 
-                 className="w-full bg-navy-950/50 border border-white/10 rounded-xl p-3 text-white focus:ring-1 focus:ring-eco-green focus:border-eco-green backdrop-blur-md transition-all outline-none"
-                 value={formData.requestsPerDay}
-                 onChange={e => setFormData({...formData, requestsPerDay: Number(e.target.value)})}
-               />
-             </div>
-
-              <button 
-                type="submit" 
-                disabled={loading}
-                className="w-full bg-eco-green/90 text-navy-950 font-bold py-4 rounded-xl hover:bg-eco-green transition-all mt-4 flex justify-center items-center gap-2 shadow-[0_4px_20px_rgba(0,255,136,0.2)] hover:shadow-[0_8px_30px_rgba(0,255,136,0.4)] hover:scale-[1.01] active:scale-[0.99]"
-              >
-                {loading ? <Sparkles className="animate-spin" /> : <Sparkles />} 
-                {loading ? 'Analyzing...' : 'Generate Suggestions'}
-              </button>
-           </form>
-           </div>
          </div>
 
-        {/* Right Side: Sticky Tree Visual */}
-        <div className="xl:w-80 hidden xl:block flex-shrink-0">
-            {/* Calculate total suggested savings (mock heuristic for tree growth) */}
-            <TreeVisual carbonSaved={
-                result 
-                  ? (result.suggestions?.reduce((acc: number, s: any) => acc + parseInt(s.savings), 0) || 0) 
-                  : 0
-            } />
-        </div>
-      </div>
+         {/* Right Side: Sticky Carbon Meter */}
+         <div className="xl:w-96 w-full flex-shrink-0 xl:sticky xl:top-8 space-y-6">
+            
+            {/* Meter A */}
+            <CarbonMeter 
+               value={metricsA.score} 
+               rawCo2={metricsA.annualCO2} 
+               label="Scenario A"
+            />
 
-      {/* Results Section - Moved Below */}
-      <div className="space-y-6">
-            {result ? (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                 <div className="bg-[#0b0c0d]/80 border border-white/5 p-8 rounded-3xl shadow-lg relative overflow-hidden group backdrop-blur-xl">
-
-                     {/* Glossy gradient overlay */}
-                     <div className="absolute inset-0 bg-gradient-to-r from-eco-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none relative z-10" />
-                     
-                     <h4 className="text-gray-400 text-sm uppercase tracking-wider mb-2 font-medium relative z-10">Estimated Annual Impact</h4>
-                     <div className="text-5xl font-bold text-white flex items-end gap-2 tracking-tight relative z-10">
-                        {result.estimated_annual_co2_kgs} <span className="text-lg text-gray-500 mb-2">kg CO₂</span>
-                     </div>
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                   {result.suggestions?.map((s: any, i: number) => (
-                     <div key={i} className="bg-[#0b0c0d]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_40px_rgba(0,255,136,0.08)] hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
-
-                        <div className="flex justify-between items-start mb-4 relative z-10">
-                           <h4 className="font-bold text-eco-green text-lg group-hover:text-eco-light transition-colors">{s.title}</h4>
-                           <span className="bg-eco-green/10 text-eco-green text-xs px-3 py-1 rounded-full border border-eco-green/10">
-                             -{s.savings}
-                           </span>
-                        </div>
-                        <p className="text-gray-300 text-sm mb-4 leading-relaxed">{s.description}</p>
-                        {s.tradeoff && (
-                          <div className="text-xs text-amber-500/80 flex items-center gap-1 bg-amber-500/5 px-2 py-1 rounded-lg w-fit">
-                            ⚠️ {s.tradeoff}
-                          </div>
-                        )}
-                     </div>
-                   ))}
-                 </div>
-              </div>
-            ) : (
-              <div className="h-40 flex flex-col items-center justify-center text-gray-500 border border-dashed border-navy-700 rounded-3xl bg-navy-800/30">
-                 <p className="text-lg font-medium">Ready to optimize?</p>
-                 <p className="text-sm opacity-60">Complete the configuration above.</p>
-              </div>
+            {/* Meter B (if comparing) */}
+            {metricsB && (
+               <div className="relative">
+                  <div className="absolute inset-x-0 -top-4 flex justify-center z-10">
+                     <span className="bg-navy-900 text-gray-500 text-xs px-2 py-1 rounded border border-white/10 uppercase font-bold shadow-lg">VS</span>
+                  </div>
+                  <CarbonMeter 
+                    value={metricsB.score} 
+                    rawCo2={metricsB.annualCO2} 
+                    label="Scenario B"
+                    delta={delta}
+                  />
+               </div>
             )}
+
+         </div>
+
       </div>
 
-      <div className="border-t border-navy-700/50 pt-8 mt-8">
+      <div className="border-t border-navy-700/50 pt-8 mt-12">
           <PromptOptimizer />
       </div>
+
     </div>
   );
 }
+
