@@ -56,8 +56,8 @@ export default function DashboardPage() {
   }, []);
 
   const runSimulation = async () => {
-    // block simulation if no projects
-    if (!data?.availableProjects?.length && !data?.global?.requests) return;
+    // block simulation if already running
+    if (simulating) return;
 
     setSimulating(true);
     try {
@@ -170,9 +170,9 @@ export default function DashboardPage() {
         <div className="flex gap-2">
             <button 
               onClick={runSimulation}
-              disabled={simulating || (!data?.availableProjects?.length && !data?.global?.requests)}
+              disabled={simulating}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
-                 simulating || (!data?.availableProjects?.length && !data?.global?.requests)
+                 simulating
                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
                    : 'bg-eco-green text-navy-900 hover:bg-eco-light shadow-[0_0_15px_rgba(0,255,136,0.3)]'
               }`}
@@ -267,88 +267,125 @@ export default function DashboardPage() {
        </div>
        
        {/* Carbon Accounting Engine */}
-       <div className="bg-[#0b0c0d]/80 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-t-4 border-t-eco-green relative overflow-hidden">
-          {/* <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-[500px] h-[500px] rounded-full bg-emerald-500 blur-[120px] opacity-60" />
-          </div> */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-eco-green/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 relative z-10">
-             <div>
-                <h3 className="text-xl font-bold text-eco-green flex items-center gap-2">
-                   <Leaf className="text-eco-green" /> Carbon Accounting Engine
-                </h3>
-                <p className="text-sm text-gray-400">Monitor budget compliance for GHG Protocol Scope 3</p>
-             </div>
-             
-             <div className="flex items-center gap-2">
-               <span className="text-gray-400 text-sm">Select Project:</span>
-               
-               {projectOptions.length > 0 ? (
-                   <select 
-                     value={selectedProject}
-                     onChange={(e) => setSelectedProject(e.target.value)}
-                     className="bg-navy-950/50 border border-white/10 text-white rounded-xl px-4 py-2 text-sm focus:border-eco-green focus:ring-1 focus:ring-eco-green outline-none min-w-[200px] backdrop-blur-md transition-all"
-                   >
-                     {projectOptions.map((p: string) => (
-                       <option key={p} value={p} className="bg-black">{p}</option>
-                     ))}
-                   </select>
-               ) : (
-                    <span className="text-gray-500 text-sm italic">No Projects Connected</span>
-               )}
-             </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-             {/* Progress Bar */}
-             <div className="md:col-span-2 space-y-4">
-                 <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">Monthly Carbon Budget ({budget}g)</span>
-                    <span className={usagePercent > 80 ? "text-red-400" : "text-eco-green"}>
-                      {usagePercent.toFixed(1)}% Used
-                    </span>
-                 </div>
-                 {/* Fixed: Removed extra borders and ensured width is correct */}
-                 <div className="w-full h-4 bg-navy-950/50 rounded-full overflow-hidden relative shadow-inner">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-1000 ${
-                        usagePercent > 80 ? 'bg-red-500' : 'bg-eco-green'
-                      }`}
-                      style={{ width: `${Math.max(usagePercent, 2)}%` /* Min 2% visibility */ }}
-                    />
-                 </div>
-                 <div className="flex justify-between text-xs text-gray-500">
-                    <span>0g</span>
-                    <span>{budget}g Limit</span>
-                 </div>
-             </div>
+    <div className="bg-[#0b0c0d]/80 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-t-4 border-t-eco-green relative overflow-hidden">
+  
+  <div className="absolute top-0 right-0 w-96 h-96 bg-eco-green/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
 
-             {/* Score Card */}
-             <div className="bg-navy-950/40 rounded-2xl p-6 flex items-center justify-between border border-white/5 shadow-inner">
-                <div>
-                   <div className="text-gray-400 text-sm">Sustainability Score</div>
-                   <div className="text-xs text-gray-500">Based on recent activity</div>
-                </div>
-                <div className={`text-4xl font-bold ${
-                  getScore(currentProjectMetrics.co2) === 'A' ? 'text-eco-green' : 
-                  getScore(currentProjectMetrics.co2) === 'B' ? 'text-blue-400' :
-                  'text-red-400'
-                }`}>
-                   {getScore(currentProjectMetrics.co2)}
-                </div>
-             </div>
-          </div>
-       </div>
+  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 relative z-10">
+    <div>
+      <h3 className="text-xl font-bold text-eco-green flex items-center gap-2">
+        <Leaf className="text-eco-green" /> Carbon Accounting Engine
+      </h3>
+      <p className="text-sm text-gray-400">
+        Monitor budget compliance for GHG Protocol Scope 3
+      </p>
+    </div>
 
-       <div className="flex justify-center mt-8 pb-8">
-          <button 
-             onClick={handleDownloadReport}
-             className="bg-navy-800/80 border border-white/10 hover:bg-eco-green hover:text-navy-900 hover:border-transparent text-white font-medium py-4 px-8 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_25px_rgba(0,255,136,0.2)] transition-all duration-300 flex items-center gap-3 group active:scale-[0.98]"
-          >
-             Download Full Regulatory Report (CSRD/ISO) 
-             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-          </button>
-       </div>
+    <div className="flex items-center gap-2">
+      <span className="text-gray-400 text-sm">Select Project:</span>
+
+      {projectOptions.length > 0 ? (
+        <select
+          value={selectedProject}
+          onChange={(e) => setSelectedProject(e.target.value)}
+          className="bg-navy-950/50 border border-white/10 text-white rounded-xl px-4 py-2 text-sm focus:border-eco-green focus:ring-1 focus:ring-eco-green outline-none min-w-[200px] backdrop-blur-md transition-all"
+        >
+          {projectOptions.map((p: string) => (
+            <option key={p} value={p} className="bg-black">
+              {p}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <span className="text-gray-500 text-sm italic">
+          No Projects Connected
+        </span>
+      )}
+    </div>
+  </div>
+
+  {/* ===== MAIN GRID ===== */}
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    
+    {/* ===== PROGRESS BAR ===== */}
+   <div className="md:col-span-2 space-y-4">
+  <div className="flex justify-between text-sm">
+    <span className="text-gray-300">
+      Monthly Carbon Budget ({budget}g)
+    </span>
+    <span
+      className={
+        usagePercent > 80 ? "text-red-400" : "text-eco-green"
+      }
+    >
+      {usagePercent.toFixed(1)}% ({currentProjectMetrics.co2.toFixed(1)}g)
+    </span>
+  </div>
+
+  {(() => {
+    const safeUsagePercent = Math.min(
+      Math.max(usagePercent || 0, 0),
+      100
+    );
+
+    return (
+      <div className="w-full h-4 bg-gray-700/30 border border-white/5 rounded-full overflow-hidden shadow-inner">
+        <div
+  className="h-full rounded-full transition-all duration-700 ease-out"
+  style={{
+    width: `${Math.max(safeUsagePercent, 2)}%`,
+    backgroundColor: safeUsagePercent > 80 ? "#ef4444" : "#00ff88", // 🔥 GUARANTEED
+  }}
+/>
+      </div>
+    );
+  })()}
+
+  <div className="flex justify-between text-xs text-gray-500">
+    <span>0g</span>
+    <span>{budget}g Limit</span>
+  </div>
+</div>
+
+    {/* ===== SCORE CARD ===== */}
+    <div className="bg-navy-950/40 rounded-2xl p-6 flex items-center justify-between border border-white/5 shadow-inner">
+      <div>
+        <div className="text-gray-400 text-sm">
+          Sustainability Score
+        </div>
+        <div className="text-xs text-gray-500">
+          Based on recent activity
+        </div>
+      </div>
+
+      <div
+        className={`text-4xl font-bold ${
+          getScore(currentProjectMetrics.co2) === "A"
+            ? "text-eco-green"
+            : getScore(currentProjectMetrics.co2) === "B"
+            ? "text-blue-400"
+            : "text-red-400"
+        }`}
+      >
+        {getScore(currentProjectMetrics.co2)}
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* ===== DOWNLOAD BUTTON ===== */}
+<div className="flex justify-center mt-8 pb-8">
+  <button
+    onClick={handleDownloadReport}
+    className="bg-navy-800/80 border border-white/10 hover:bg-eco-green hover:text-navy-900 hover:border-transparent text-white font-medium py-4 px-8 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_25px_rgba(0,255,136,0.2)] transition-all duration-300 flex items-center gap-3 group active:scale-[0.98]"
+  >
+    Download Full Regulatory Report (CSRD/ISO)
+    <ArrowRight
+      size={18}
+      className="group-hover:translate-x-1 transition-transform"
+    />
+  </button>
+</div> 
 
     </div>
   );

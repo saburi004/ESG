@@ -1,4 +1,7 @@
 import type { Config } from "tailwindcss";
+const {
+    default: flattenColorPalette,
+} = require("tailwindcss/lib/util/flattenColorPalette");
 
 const config: Config = {
     content: [
@@ -6,6 +9,7 @@ const config: Config = {
         "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
         "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     ],
+    darkMode: "class",
     theme: {
         extend: {
             colors: {
@@ -25,24 +29,41 @@ const config: Config = {
             animation: {
                 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                 'glow': 'glow 2s ease-in-out infinite alternate',
-                'aurora': 'aurora 18s linear infinite',
+                'aurora': 'aurora 60s linear infinite',
+                'shine': 'shine 5s linear infinite',
             },
             keyframes: {
                 glow: {
                     '0%': { boxShadow: '0 0 5px #00ff88' },
                     '100%': { boxShadow: '0 0 20px #00ff88, 0 0 10px #4ade80' },
                 },
+                shine: {
+                    '0%': { 'background-position': '100%' },
+                    '100%': { 'background-position': '-100%' },
+                },
                 aurora: {
-                    "0%, 100%": {
-                        "backgroundPosition": "50% 50%, 50% 50%"
+                    from: {
+                        backgroundPosition: "50% 50%, 50% 50%",
                     },
-                    "50%": {
-                        "backgroundPosition": "350% 50%, 350% 50%"
-                    }
-                }
-            }
+                    to: {
+                        backgroundPosition: "350% 50%, 350% 50%",
+                    },
+                },
+            },
         },
     },
-    plugins: [],
+    plugins: [addVariablesForColors],
 };
+
+function addVariablesForColors({ addBase, theme }: any) {
+    const allColors = flattenColorPalette(theme("colors"));
+    const newVars = Object.fromEntries(
+        Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+    );
+
+    addBase({
+        ":root": newVars,
+    });
+}
+
 export default config;

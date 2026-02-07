@@ -62,7 +62,7 @@ export default function AskPage() {
       <div className="flex-1 bg-[#0b0c0d]/80 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden flex flex-col shadow-[0_0_50px_rgba(16,185,129,0.05)] relative group">
         {/* Ambient Glow */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-[500px] h-[500px] rounded-full bg-emerald-500 blur-[200px] opacity-60" />
+            <div className="w-[500px] h-[500px] rounded-full bg-emerald-500 blur-[200px] opacity-50" />
         </div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-eco-green/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
         

@@ -57,11 +57,13 @@ export default function ConnectPage() {
             Securely integrate your LLM provider to start tracking real-time carbon metrics.
          </p>
       </div>
-
+ <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-[500px] h-[500px] rounded-full bg-emerald-500 blur-[200px] opacity-50" />
+        </div>
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
         
         {/* Left: Form */}
-        <div className="bg-navy-800/50 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.2)] hover:shadow-[0_0_60px_rgba(16,185,129,0.05)] transition-shadow duration-500 group relative">
+        <div className="bg-[#0b0c0d]/80 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.2)] hover:shadow-[0_0_60px_rgba(16,185,129,0.05)] transition-shadow duration-500 group relative">
           {/* Subtle Border Glow */}
           <div className="absolute inset-0 rounded-3xl border border-white/5 group-hover:border-eco-green/20 transition-colors pointer-events-none" />
           
@@ -166,7 +168,7 @@ export default function ConnectPage() {
 
         {/* Right: Security Info */}
         <div className="flex flex-col justify-center space-y-6">
-           <div className="bg-navy-800/30 backdrop-blur-md p-8 rounded-3xl border border-white/5 hover:bg-navy-800/40 transition-colors">
+           <div className="bg-[#0b0c0d]/80 backdrop-blur-xl p-8 rounded-3xl border border-white/5 hover:bg-[#0b0c0d]/90 transition-colors">
               <div className="w-14 h-14 bg-gradient-to-br from-eco-green/20 to-teal-500/10 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-white/5">
                  <ShieldCheck className="text-eco-green" size={32} />
               </div>
@@ -178,7 +180,7 @@ export default function ConnectPage() {
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div className="bg-navy-800/30 backdrop-blur-md p-6 rounded-2xl border border-white/5">
+               <div className="bg-[#0b0c0d]/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 hover:bg-[#0b0c0d]/60 transition-colors">
                    <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
                      <CheckCircle2 className="text-blue-400" size={16} /> Accessible Data
                    </h3>
@@ -189,7 +191,7 @@ export default function ConnectPage() {
                    </ul>
                </div>
 
-               <div className="bg-navy-800/30 backdrop-blur-md p-6 rounded-2xl border border-white/5">
+               <div className="bg-[#0b0c0d]/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 hover:bg-[#0b0c0d]/60 transition-colors">
                    <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
                      <AlertTriangle className="text-red-400" size={16} /> Restricted Data
                    </h3>

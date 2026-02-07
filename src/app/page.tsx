@@ -77,6 +77,7 @@ import { motion } from "framer-motion";
 import Antigravity from '../components/ui/Antigravity'
 
 export default function LandingPage() {
+  const showRadialGradient = true;
   return (
     <main className="relative min-h-screen text-white overflow-hidden">
       {/* Aurora Background */}
@@ -84,27 +85,33 @@ export default function LandingPage() {
         <div
           className="absolute inset-0 overflow-hidden"
           style={{
-            "--aurora": "repeating-linear-gradient(100deg,#0BE08E_10%,#45DBF1_15%,#0DB8A5_20%,#0BE08E_25%,#45DBF1_30%)",
-            "--dark-gradient": "repeating-linear-gradient(100deg,#000_0%,#000_7%,transparent_10%,transparent_12%,#000_16%)",
-            "--cyan-bright": "#0BE08E",
+            "--aurora":
+              "repeating-linear-gradient(100deg,#08F6D8_10%,#45DBF1_15%,#0DB8A5_20%,#08F6D8_25%,#45DBF1_30%)",
+            "--dark-gradient":
+              "repeating-linear-gradient(100deg,#000_0%,#000_7%,transparent_10%,transparent_12%,#000_16%)",
+            "--white-gradient":
+              "repeating-linear-gradient(100deg,#fff_0%,#fff_7%,transparent_10%,transparent_12%,#fff_16%)",
+            "--cyan-bright": "#08F6D8",
             "--cyan-blue": "#45DBF1",
             "--teal-dark": "#0DB8A5",
             "--black": "#000",
+            "--white": "#fff",
             "--transparent": "transparent"
           } as CSSProperties}>
           <div
             className={cn(
-              `after:animate-aurora pointer-events-none absolute -inset-[10px] [background-image:var(--dark-gradient),var(--aurora)] [background-size:300%,_200%] [background-position:50%_50%,50%_50%] opacity-30 blur-[10px] will-change-transform [--aurora:repeating-linear-gradient(100deg,var(--cyan-bright)_10%,var(--cyan-blue)_15%,var(--teal-dark)_20%,var(--cyan-bright)_25%,var(--cyan-blue)_30%)] [--dark-gradient:repeating-linear-gradient(100deg,var(--black)_0%,var(--black)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--black)_16%)] after:absolute after:inset-0 after:[background-image:var(--dark-gradient),var(--aurora)] after:[background-size:200%,_100%] after:mix-blend-difference after:content-[""]`,
-              `[mask-image:radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]`
+              `after:animate-aurora pointer-events-none absolute -inset-[10px] [background-image:var(--dark-gradient),var(--aurora)] [background-size:300%,_200%] [background-position:50%_50%,50%_50%] opacity-50 blur-[10px] will-change-transform [--aurora:repeating-linear-gradient(100deg,var(--cyan-bright)_10%,var(--cyan-blue)_15%,var(--teal-dark)_20%,var(--cyan-bright)_25%,var(--cyan-blue)_30%)] [--dark-gradient:repeating-linear-gradient(100deg,var(--black)_0%,var(--black)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--black)_16%)] [--white-gradient:repeating-linear-gradient(100deg,var(--white)_0%,var(--white)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--white)_16%)] after:absolute after:inset-0 after:[background-image:var(--dark-gradient),var(--aurora)] after:[background-size:200%,_100%] after:[background-attachment:fixed] after:mix-blend-difference after:content-[""]`,
+              showRadialGradient &&
+                `[mask-image:radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]`
             )}></div>
         </div>
       </div>
 
       {/* Antigravity Component - Full Screen Background */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 color-[#42c4b3ff]">
         <Antigravity
-          count={300}
-          magnetRadius={6}
+          count={250}
+          magnetRadius={20}
           ringRadius={2}
           waveSpeed={0.4}
           waveAmplitude={1}

@@ -120,7 +120,7 @@ export default function SuggestionsPage() {
             <div className="w-[500px] h-[500px] rounded-full bg-emerald-500 blur-[200px] opacity-20" />
         </div>
          {/* Left Side: Scenario Builders + Insights */}
-         <div className="flex-1 w-full space-y-8">
+         <div className="flex-1 w-full space-y-8 ml-6">
             
             {/* Scenarios Flex Container (Variable Widths) */}
             <div className="flex flex-col lg:flex-row gap-6">
@@ -198,6 +198,7 @@ export default function SuggestionsPage() {
          <div className="xl:w-96 w-full flex-shrink-0 xl:sticky xl:top-8 space-y-6">
             
             {/* Meter A */}
+            
             <CarbonMeter 
                value={metricsA.score} 
                rawCo2={metricsA.annualCO2} 
