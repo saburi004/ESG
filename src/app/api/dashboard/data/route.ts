@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import redis from '@/lib/redis';
+
 import { PROJECTS } from '@/utils/constants';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';

@@ -1,14 +1,12 @@
 import { PROJECTS } from '@/utils/constants';
-import redis from '@/lib/redis';
+import getRedisClient from '@/lib/redis';
 import { CarbonService } from './carbon';
 import Groq from 'groq-sdk';
 import dbConnect from '@/lib/db';
 import DashboardData from '@/models/DashboardData';
 import crypto from 'crypto';
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY || 'gsk_dummy',
-});
+
 
 // Redis Keys:
 // project:{id}:metrics -> HASH { tokens, requests, co2, energy }
@@ -18,6 +16,9 @@ const groq = new Groq({
 export class TrafficSimulator {
 
     static async simulateTraffic(userEmail?: string) { // Accepts optional userEmail
+        const groq = new Groq({
+            apiKey: process.env.GROQ_API_KEY || 'gsk_dummy',
+        });
         const results = [];
         await dbConnect(); // Ensure DB connection
 
@@ -41,7 +42,7 @@ export class TrafficSimulator {
                 const { energykWh, co2Grams } = CarbonService.calculateImpact(project.model, totalTokens);
 
                 // Store in Redis (System-wide metrics)
-                const pipeline = redis.pipeline();
+                const pipeline = getRedisClient().pipeline();
 
                 // Increment Project Metrics
                 pipeline.hincrby(`project:${project.id}:metrics`, 'tokens', totalTokens);

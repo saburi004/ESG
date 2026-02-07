@@ -4,12 +4,13 @@ import Groq from 'groq-sdk';
 import { PROJECTS } from '@/utils/constants';
 import { rateLimit } from '@/lib/rate-limit';
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-});
+
 
 export async function POST(req: Request) {
     try {
+        const groq = new Groq({
+            apiKey: process.env.GROQ_API_KEY,
+        });
         if (!process.env.GROQ_API_KEY) {
             throw new Error('GROQ_API_KEY is missing');
         }

@@ -4,9 +4,7 @@ import { MODEL_ENERGY_ESTIMATES, REGIONS } from '@/utils/constants';
 import { EmberService } from '@/services/ember';
 import { rateLimit } from '@/lib/rate-limit';
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY_SUGGESTIONS || process.env.GROQ_API_KEY,
-});
+
 
 export async function POST(req: Request) {
     try {
@@ -14,6 +12,10 @@ export async function POST(req: Request) {
         if (!apiKey) {
             throw new Error('GROQ_API_KEY_SUGGESTIONS or GROQ_API_KEY is missing');
         }
+
+        const groq = new Groq({
+            apiKey: apiKey,
+        });
 
         // Rate Limiting
         const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";

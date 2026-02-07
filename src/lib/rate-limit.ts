@@ -1,4 +1,4 @@
-import redis from './redis';
+import getRedisClient from './redis';
 
 export async function rateLimit(identifier: string) {
     const key = `ratelimit:${identifier}`;
@@ -6,9 +6,9 @@ export async function rateLimit(identifier: string) {
     const limit = 1; // 1 request per window
 
     try {
-        const current = await redis.incr(key);
+        const current = await getRedisClient().incr(key);
         if (current === 1) {
-            await redis.expire(key, limitWindow);
+            await getRedisClient().expire(key, limitWindow);
         }
 
         return {
